@@ -1,0 +1,68 @@
+﻿[2024-09-20 14:36:24.554] [0x00005488] [INFO] <<<<<<<<<<<<<<<<<<<<<<<< Program Launch >>>>>>>>>>>>>>>>>>
+[2024-09-20 14:36:24.555] [0x00005488] [INFO] A new data object is created for 1frame(s), with frame size of 33554432 bytes
+[2024-09-20 14:36:24.555] [0x00005488] [INFO] A new data object is created for 1frame(s), with frame size of 33554432 bytes
+[2024-09-20 14:36:24.555] [0x00005488] [INFO] A new data object is created for 1frame(s), with frame size of 33554432 bytes
+[2024-09-20 14:36:24.555] [0x00005488] [INFO] A new data object is created for 1frame(s), with frame size of 33554432 bytes
+[2024-09-20 14:36:24.555] [0x00005488] [INFO] A new processor object is created.
+[2024-09-20 14:36:24.555] [0x00005488] [INFO] A new detector object is created.
+[2024-09-20 14:36:24.556] [0x00005488] [INFO] The socket is not responsive.
+[2024-09-20 14:36:24.556] [0x00005488] [INFO] Initializing the socket.
+[2024-09-20 14:36:24.556] [0x00005488] [INFO] Detector main connection in progress...
+[2024-09-20 14:36:24.570] [0x00005488] [INFO] Detector main connection is exclusive.
+[2024-09-20 14:36:26.384] [0x00005488] [INFO] HV is ramped to -1000 with slew rate of 20V/s
+[2024-09-20 14:37:18.292] [0x00005488] [INFO] Detector mode is set to Normal Mode
+[2024-09-20 14:37:18.335] [0x00005488] [INFO] Trigger mode is set to 0
+[2024-09-20 14:37:18.380] [0x00005488] [INFO] Number of frames set by user is 1 and actual number of frames is 1
+[2024-09-20 14:37:18.380] [0x00005488] [INFO] A new data object is created for 1frame(s), with frame size of 33554432 bytes
+[2024-09-20 14:37:18.432] [0x00005488] [INFO] Read Trigger mode: 0100000000.
+[2024-09-20 14:37:18.432] [0x00005488] [INFO] Capture is in progress... [mode 0]
+[2024-09-20 14:37:20.169] [0x00005488] [INFO] Capture was successful.
+[2024-09-20 14:37:20.170] [0x00005488] [INFO] A new data object is created for 1frame(s), with frame size of 33554432 bytes
+[2024-09-20 14:37:20.197] [0x00005488] [INFO] A new data object is created for 1frame(s), with frame size of 2097152 bytes
+[2024-09-20 14:37:20.198] [0x00005488] [INFO] Offset map is generated.
+[2024-09-20 14:37:20.198] [0x00005488] [INFO] A new data object is created for 1frame(s), with frame size of 33554432 bytes
+[2024-09-20 14:37:20.203] [0x00005488] [INFO] Frame size: 33554432 [Data_GetFrameSize]
+[2024-09-20 14:37:20.237] [0x00005488] [INFO] A new data object is created for 1frame(s), with frame size of 33554432 bytes
+[2024-09-20 14:37:20.251] [0x00005488] [INFO] Read Trigger mode: 0100001000.
+[2024-09-20 14:37:20.252] [0x00005488] [INFO] Capture is in progress... [mode 0]
+[2024-09-20 14:37:21.767] [0x00005488] [INFO] Capture was successful.
+[2024-09-20 14:37:21.767] [0x00005488] [INFO] A new data object is created for 1frame(s), with frame size of 33554432 bytes
+[2024-09-20 14:37:25.802] [0x00005488] [INFO] A new data object is created for 1frame(s), with frame size of 2097152 bytes
+[2024-09-20 14:37:25.803] [0x00005488] [INFO] Gain map is generated.
+[2024-09-20 14:37:25.803] [0x00005488] [INFO] A new data object is created for 1frame(s), with frame size of 33554432 bytes
+[2024-09-20 14:37:25.808] [0x00005488] [INFO] Frame size: 33554432 [Data_GetFrameSize]
+[2024-09-20 14:37:25.837] [0x00005488] [INFO] A new data object is created for 1frame(s), with frame size of 33554432 bytes
+[2024-09-20 14:37:25.842] [0x00005488] [INFO] Frame size: 33554432 [Data_GetFrameSize]
+[2024-09-20 14:37:25.866] [0x00005488] [INFO] Trigger mode is set to 0
+[2024-09-20 14:37:25.866] [0x00005488] [INFO] A new data object is created for 1frame(s), with frame size of 33554432 bytes
+[2024-09-20 14:37:25.919] [0x00005488] [INFO] Read Trigger mode: 0100001000.
+[2024-09-20 14:37:25.919] [0x00005488] [INFO] Capture is in progress... [mode 0]
+[2024-09-20 14:37:27.402] [0x00005488] [INFO] Capture was successful.
+[2024-09-20 14:37:27.402] [0x00005488] [INFO] A new data object is created for 1frame(s), with frame size of 33554432 bytes
+[2024-09-20 14:37:27.432] [0x00005488] [INFO] Frame size: 33554432 [Data_GetFrameSize]
+[2024-09-20 14:37:27.453] [0x00005488] [INFO] Gain scale factor: 1.57191
+[2024-09-20 14:37:27.564] [0x00005488] [INFO] Negative count: 8256866
+[2024-09-20 14:37:27.564] [0x00005488] [INFO] Flat field  correction is applied with arbitrary offset of 0
+[2024-09-20 14:37:27.564] [0x00005488] [INFO] Frame size: 33554432 [Data_GetFrameSize]
+[2024-09-20 14:37:27.705] [0x00005488] [INFO] Bad pixel correction is applied.
+[2024-09-20 14:37:27.705] [0x00005488] [INFO] Frame size: 33554432 [Data_GetFrameSize]
+[2024-09-20 14:37:27.731] [0x00005488] [INFO] The data object is deleted.
+[2024-09-20 14:37:27.734] [0x00005488] [INFO] The data object is deleted.
+[2024-09-20 14:37:27.735] [0x00005488] [INFO] The data object is deleted.
+[2024-09-20 14:37:27.737] [0x00005488] [INFO] The data object is deleted.
+[2024-09-20 14:37:27.739] [0x00005488] [INFO] The data object is deleted.
+[2024-09-20 14:37:27.740] [0x00005488] [INFO] The data object is deleted.
+[2024-09-20 14:37:27.742] [0x00005488] [INFO] The data object is deleted.
+[2024-09-20 14:37:27.744] [0x00005488] [INFO] The data object is deleted.
+[2024-09-20 14:37:27.744] [0x00005488] [INFO] The data object is deleted.
+[2024-09-20 14:37:27.746] [0x00005488] [INFO] The data object is deleted.
+[2024-09-20 14:37:27.746] [0x00005488] [INFO] The data object is deleted.
+[2024-09-20 14:37:27.747] [0x00005488] [INFO] The data object is deleted.
+[2024-09-20 14:37:27.747] [0x00005488] [INFO] The data object is deleted.
+[2024-09-20 14:37:27.747] [0x00005488] [INFO] The data object is deleted.
+[2024-09-20 14:37:27.747] [0x00005488] [INFO] The data object is deleted.
+[2024-09-20 14:37:27.747] [0x00005488] [INFO] The processor object is deleted.
+[2024-09-20 14:37:27.811] [0x00005488] [INFO] HV is ramped to 0 with slew rate of 20V/s
+[2024-09-20 14:38:18.585] [0x00005488] [INFO] Disconnecting the socket...
+[2024-09-20 14:38:18.585] [0x00005488] [INFO] The socket is disconnected.
+[2024-09-20 14:38:18.585] [0x00005488] [INFO] General success. [BrillianSe_Shutdown]

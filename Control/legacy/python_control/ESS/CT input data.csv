@@ -1,0 +1,13 @@
+Number_of_subaquisitions,4
+Number_of_projections per subaquisition,40
+Number_of_flats_per_subaquisition,2
+Number_of_darks_per_subaquisition,2
+Exposure_time,4
+Number of exposures,1
+Sample_out_X,-6
+Sample_out_Y,0
+Sample_out_Z,0
+Sample_in_X,-8.63
+Sample_in_Y,0
+Sample_in_Z,0
+Offset,2.15
