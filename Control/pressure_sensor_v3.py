@@ -32,7 +32,7 @@ def PS_check_pressure(PS_Socket, timeout=2):
     return int(reading)
 
 def PS_Open():
-    PS_Socket = serial.Serial('COM6', baudrate=9600, timeout=2)
+    PS_Socket = serial.Serial('COM3', baudrate=9600, timeout=2)
     PS_Socket.dtr = False  # Set DTR low
     time.sleep(0.5)        # Wait for the Arduino to reset
     PS_Socket.dtr = True   # Set DTR high again to re-enable communication

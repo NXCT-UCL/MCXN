@@ -53,7 +53,7 @@ class Xeryon:
     axis_letter_list = None # A list storing all the axis_letters in the system.
     master_settings = None
 
-    def __init__(self, COM_port = "COM7", baudrate = 115200):
+    def __init__(self, COM_port = "COM5", baudrate = 115200):
         """
             :param COM_port: Specify the COM port used
             :type COM_port: string

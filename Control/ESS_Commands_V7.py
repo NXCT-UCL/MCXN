@@ -45,7 +45,7 @@ def ESS_Open():
     global ESS_Socket 
 
     # The drive is connected to COM port 14 (but this is set-up dependant) 
-    ESS_Socket = serial.Serial('COM5', baudrate=9600, timeout=0.5) 
+    ESS_Socket = serial.Serial('COM4', baudrate=9600, timeout=0.5) 
 
     # Inform user that the drive has been connected  
     print("Drive Connected") 
