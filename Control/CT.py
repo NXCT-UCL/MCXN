@@ -10,7 +10,6 @@ Created on Mon Apr  7 15:48:27 2025
 
 import time
 import os
-from BrillMethods import *
 import source_commands as SC
 import aerotech_functions as AT
 import pressure_sensor_v3 as PS
@@ -19,6 +18,8 @@ import shutil
 import numpy as np
 import newport_functions as NP
 import random
+from detectors.factory import get_detector
+import tifffile as tiff
 
 filepath = 'D:/25_04_07/8_MuscleGFPD9_40kv_1p2um/'
 Subfolder_name="data/"
@@ -55,6 +56,7 @@ numDarkFr = 16 # number of darks, taken 10mins after scan
 numFlatFr = 16 # number of flat frames averaged 
 numSampleFr = 1 # number of sample frames averaged
 increment = direction*(rotation_angle/num_proj) #rotation increment at each projection
+det_name = 'Brillianse'
 
 # Jitter
 jitter_flag = 1
@@ -124,7 +126,6 @@ NT_kvp = float(xcs.receive().strip())
 xcs.send("nanotube_workpoint=?")
 NT_wp = float(xcs.receive().strip())
 
-
 # convert exposure time to string for saving
 exp_str = exp/1000
 exp_str = str(int(exp_str)) if exp_str.is_integer() else str(exp_str).replace('.', 'p')
@@ -161,27 +162,11 @@ if press_read == 0:
     ESS.ESS_Close()
 else:
     ESS.ESS_Absolute_Move(ESS_start_pos) #rotation
+    
+detector = get_detector(det_name)
+detector.initialise()
+detector.set_exposure_time(exp)
 
-# define empty variables
-error_flag = c_int(0)
-rec_frames = c_int(0)
-captured_data = POINTER(DataObj)()
-captured_data_mean = POINTER(DataObj)()
-
-##### Start detecotor
-# define pointers
-detector_pointer = POINTER(DetObj)()
-processor_pointer = Processor_Init()
-# initialise detector
-print("Initializing the detector...")
-result = BrillianSe_Init(byref(detector_pointer))
-print("Initialized detector: %s" % BrillianSe_GetErrorMessage(result))
-result = BrillianSe_SetNumFrames(detector_pointer, 1)
-print("Set num frames: %s" % BrillianSe_GetErrorMessage(result))
-# Set times
-result = BrillianSe_SetFrameTime(detector_pointer, exp+5, exp)
-print("Exposure time set: %s" % BrillianSe_GetErrorMessage(result))
-#####
 posRot = []
 
 if pre_scan:
@@ -199,16 +184,12 @@ if pre_scan:
         ESS.ESS_Absolute_Move(ESS_start_pos+direction*angle) #rotation
         posRot=np.append(posRot,ESS.ESS_Position())
         
-        captured_data = BrillianSe_Capture(detector_pointer, 0, byref(error_flag), byref(rec_frames))
+        im = detector.acquire_image()
         
-        fname = filepath + pre_scan_folder + 'Im_' + str(angle) + '.raw'
-        WriteToFile(fname, captured_data)
-        Data_Delete(byref(captured_data))
+        fname = filepath + pre_scan_folder + 'Im_' + str(angle) + '.tiff'
+        tiff.imsave(fname, im)
 
         print('######### Pre Scan Angle: '+str(angle) + ' ##########')
-        
-result = BrillianSe_SetNumFrames(detector_pointer, 1)
-print("Set num frames: %s" % BrillianSe_GetErrorMessage(result))
 
 AT.AT_move_axis_linear('X',sample_out_dx)
 time.sleep(60)
@@ -223,22 +204,13 @@ for proj_idx in np.arange(start_proj,num_proj):
         
         if proj_idx > 0:
             time.sleep(60)
+            
+        im = detector.acquire_sequence(numFlatFr)
         
-        result = BrillianSe_SetNumFrames(detector_pointer, numFlatFr)
-        print("Set num frames: %s" % BrillianSe_GetErrorMessage(result))
-        
-        captured_data = BrillianSe_Capture(detector_pointer, 0, byref(error_flag), byref(rec_frames))
-        captured_data_mean = Processor_MeanFrame(processor_pointer, captured_data)
-        
-        fname = filepath + Subfolder_name + 'flat_' + exp_str + 'sec_' + str(numFlatFr) + 'proj' + str(proj_idx) + '.raw'
-        WriteToFile(fname, captured_data_mean)
-        Data_Delete(byref(captured_data))
-        Data_Delete(byref(captured_data_mean))
-        
+        fname = filepath + Subfolder_name + 'flat_' + exp_str + 'sec_' + str(numFlatFr) + 'proj' + str(proj_idx) + '.tiff'
+        tiff.imsave(fname, im)
+                
         AT.AT_move_axis_linear('X',-sample_out_dx)
-        
-        result = BrillianSe_SetNumFrames(detector_pointer, numSampleFr)
-        print("Set num frames: %s" % BrillianSe_GetErrorMessage(result))
     
     press_read = PS.PS_check_pressure(PS_socket)
     if press_read == 0:
@@ -252,12 +224,10 @@ for proj_idx in np.arange(start_proj,num_proj):
     ESS.ESS_Absolute_Move(Step_position) #rotation
     posRot=np.append(posRot,ESS.ESS_Position())
 
-    captured_data = BrillianSe_Capture(detector_pointer, 0, byref(error_flag), byref(rec_frames))
-    captured_data_mean = Processor_MeanFrame(processor_pointer, captured_data)
-    fname = filepath + Subfolder_name + 'Im_' + exp_str + 'sec_' + 'proj' + str(proj_idx) + '.raw'
-    WriteToFile(fname, captured_data_mean)
-    Data_Delete(byref(captured_data))
-    Data_Delete(byref(captured_data_mean))
+    im = detector.acquire_sequence(numSampleFr)
+    
+    fname = filepath + Subfolder_name + 'Im_' + exp_str + 'sec_' + 'proj' + str(proj_idx) + '.tiff'
+    tiff.imsave(fname, im)
     
     print('######### Projection '+str(proj_idx) + ' ##########')
     np.savetxt(filepath+Subfolder_name+'/RotatorPositionLog.txt',posRot)
@@ -270,24 +240,16 @@ if extra_proj:
     if PS.PS_check_pressure(PS_socket):
         ESS.ESS_Absolute_Move(Step_position) #rotation
         posRot=np.append(posRot,ESS.ESS_Position())
-        captured_data = BrillianSe_Capture(detector_pointer, 0, byref(error_flag), byref(rec_frames))
-        captured_data_mean = Processor_MeanFrame(processor_pointer, captured_data)
-        fname = filepath + Subfolder_name + 'Im_' + exp_str + 'sec_' + 'proj_end.raw'
-        WriteToFile(fname, captured_data_mean)
-        Data_Delete(byref(captured_data))
-        Data_Delete(byref(captured_data_mean))
+        im = detector.acquire_sequence(numSampleFr)
+        fname = filepath + Subfolder_name + 'Im_' + exp_str + 'sec_' + 'proj_end.tiff'
+        tiff.imsave(fname, im)
 
 ##### End flat
 AT.AT_move_axis_linear('X',sample_out_dx)
 time.sleep(5)
-result = BrillianSe_SetNumFrames(detector_pointer, numFlatFr)
-print("Set num frames: %s" % BrillianSe_GetErrorMessage(result))
-captured_data = BrillianSe_Capture(detector_pointer, 0, byref(error_flag), byref(rec_frames))
-captured_data_mean = Processor_MeanFrame(processor_pointer, captured_data)
-fname = filepath + Subfolder_name + 'flat_' + exp_str + 'sec_' + str(numFlatFr) + 'Fr_proj_end.raw'
-WriteToFile(fname, captured_data_mean)
-Data_Delete(byref(captured_data))
-Data_Delete(byref(captured_data_mean))
+im = detector.acquire_sequence(numFlatFr)
+fname = filepath + Subfolder_name + 'flat_' + exp_str + 'sec_' + str(numFlatFr) + 'Fr_proj_end.tiff'
+tiff.imsave(fname, im)
 AT.AT_move_axis_linear('X',-sample_out_dx)
 time.sleep(5)
 #####
@@ -306,18 +268,12 @@ SC.wait_for_state_transition(xcs)
 
 time.sleep(600)
 # capture dark
-result = BrillianSe_SetNumFrames(detector_pointer, 1)
-print("Set num frames: %s" % BrillianSe_GetErrorMessage(result))
 for idx in range(numDarkFr):
-    captured_data = BrillianSe_Capture(detector_pointer, 0, byref(error_flag), byref(rec_frames))
-    fname = filepath + Subfolder_name + 'Dark_end_idx' + str(idx) +'.raw'
-    WriteToFile(fname, captured_data)
-    Data_Delete(byref(captured_data))
+    im = detector.acquire_sequence(numFlatFr)
+    fname = filepath + Subfolder_name + 'Dark_end_idx' + str(idx) +'.tiff'
+    tiff.imsave(fname, im)
 
-Processor_Delete(byref(processor_pointer))
 
-print("Detector shutdown is in progress...")
-result = BrillianSe_Shutdown(byref(detector_pointer))
-print("Shutdown %s" % BrillianSe_GetErrorMessage(result))
+detector.shutdown()
 
 print('######## FINISHED ########')
