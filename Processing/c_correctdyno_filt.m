@@ -17,7 +17,7 @@ end
 
 param_file = strcat(sampleFolder,'scan_parameters.txt');
 
-exp = str(read_param('exp',param_file));
+exp = num2str(read_param('exp',param_file));
 num_proj = read_param('num_proj ',param_file);
 ang_range = read_param('rotation_angle',param_file);
 numFlatFr = read_param('numFlatFr',param_file);
