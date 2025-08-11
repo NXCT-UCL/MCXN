@@ -3,6 +3,7 @@
 clear;
 
 detector = 'primeBSI';
+th = 0.02;
 
 sampleFolder = '..\';
 inFolder = strcat(sampleFolder,'data\');
@@ -111,7 +112,7 @@ parfor idx = 1:num_proj
     
     corrected = fillmissing(corrected,'linear');
     
-    corrected = remove_hot_pixels(corrected,0.02);
+    corrected = remove_hot_pixels(corrected,th);
 
     corrected = circshift(corrected,jitter_vec_px(idx),2); %%%%%
 
