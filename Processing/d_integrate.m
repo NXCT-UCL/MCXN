@@ -14,14 +14,10 @@ im_names = dir([inFolder,'*.tif']);
 
 num_proj = length(im_names);
 
-bin_fact = 1;
-lx = 1440;
-ly = 1440;
-
-E = 15;
-R1 = 9.7571;
-R2 = 33.3470-R1;
-gamma = 1000;
+E = 13;
+R1 = 6;
+R2 = 60-R1;
+gamma = 300;
 px = 4.5e-3;
 
 parfor idx = 1:num_proj

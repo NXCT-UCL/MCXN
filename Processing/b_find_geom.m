@@ -1,18 +1,29 @@
 clear;
 
-sampleFolder = '..\..\2_geom\';
+sampleFolder = '..\..\8_geom\';
 flatFolder = '..\';
 
-dx = 0.2;
+dx = 0.1;
 dz = 1;
 dx_str = num2str(dx);
 dx_str(dx_str == '.') = 'p';
 dz_str = num2str(dz);
 dz_str(dz_str == '.') = 'p';
 
-px = 4.5e-3;
+detector = 'moment';
+Mag = 2; % rough guess
 
-rect = [310,310,1439,1439];
+switch detector
+    case 'moment'
+        px = 4.5e-3;
+        rect = [310,310,1439,1439];
+
+    case 'primeBSI'
+        px = 27.9e-3;
+        rect = [200,200,917,917];
+end
+
+guess_dx = -dx/(px/M);
 
 ff = dir([flatFolder,'data/*dark*']);
 fname = strcat(flatFolder,'data\',ff(1).name);
@@ -47,14 +58,14 @@ im11 = (im11-dark)./flat;
 
 %%
 
-tform1 = transltform2d([1,0,-150;0,1,0;0,0,1]);
+tform1 = transltform2d([1,0,guess_dx;0,1,0;0,0,1]);
 
 fixedImage = im00;
 movingImage = im10;
 
 % Apply Gaussian blur to both images
-fixedImageBlurred = imgaussfilt(fixedImage, 2);
-movingImageBlurred = imgaussfilt(movingImage, 2);
+fixedImageBlurred = imgaussfilt(fixedImage, 5);
+movingImageBlurred = imgaussfilt(movingImage, 5);
 
 % Define the optimizer and metric for the registration process
 [optimizer, metric] = imregconfig('monomodal');
@@ -72,14 +83,14 @@ dpx_M1 = abs(tform.A(7));
 
 %%
 
-tform1 = transltform2d([1,0,-150;0,1,0;0,0,1]);
+tform1 = transltform2d([1,0,guess_dx;0,1,0;0,0,1]);
 
 fixedImage = im01;
 movingImage = im11;
 
 % Apply Gaussian blur to both images
-fixedImageBlurred = imgaussfilt(fixedImage, 2);
-movingImageBlurred = imgaussfilt(movingImage, 2);
+fixedImageBlurred = imgaussfilt(fixedImage, 5);
+movingImageBlurred = imgaussfilt(movingImage, 5);
 
 % Define the optimizer and metric for the registration process
 [optimizer, metric] = imregconfig('monomodal');
@@ -97,8 +108,8 @@ dpx_M2 = abs(tform.A(7));
 
 %%
 
-% dpx_M1 = 191;%%%%
-% dpx_M2 = 160;%%%%
+% dpx_M1 = 225;%%%%
+% dpx_M2 = 123;%%%%
 
 M1 = dpx_M1/dx*px;
 M2 = dpx_M2/dx*px;

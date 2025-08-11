@@ -2,6 +2,8 @@
 
 clear;
 
+detector = 'primeBSI';
+
 sampleFolder = '..\';
 inFolder = strcat(sampleFolder,'data\');
 outFolder = strcat(sampleFolder, 'corrected_filt2\');
@@ -12,20 +14,30 @@ else
     disp(['Folder ', outFolder, ' already exists.']);
 end
 
-num_proj = 1800;
-ang_range = 360;
+param_file = strcat(sampleFolder,'scan_parameters.txt');
 
-exp = '4';
-numFr = 3;
-numFlatFr = 16;
-bin_fact = 1;
-lx = 2048;
-ly = 2048;
-interval_flat = 200;
-px = 4.5e-3;
+exp = str(read_param('exp',param_file));
+num_proj = read_param('num_proj ',param_file);
+ang_range = read_param('rotation_angle',param_file);
+numFlatFr = read_param('numFlatFr',param_file);
+interval_flat = read_param('flat_interval',param_file);
 
-rect = [310,310,1439,1439];
-rect(2) = ly-(rect(2)+rect(4));
+switch detector
+    case 'moment'
+        ly = 2048;
+        lx = 2048;
+        px = 4.5e-3;
+        rect = [310,310,1439,1439];
+        rect(2) = ly-(rect(2)+rect(4));
+        flip = 1;
+
+    case 'primeBSI'
+        ly = 1314;
+        lx = 1314;
+        px = 27.9e-3;
+        rect = [200,200,917,917];
+        flip = 0;
+end
 
 jitter_flag = 0;
 
@@ -34,9 +46,9 @@ ref_step_proj = num_proj/ang_range*ref_step;
 ref_positions = 0:ref_step_proj:num_proj;
 load shifts.mat
 
-fname = strcat(sampleFolder, 'BP_map.tif');
-BP_map = double(imread(fname));
-BP_map = imcrop(BP_map, rect);
+% fname = strcat(sampleFolder, 'BP_map.tif');
+% BP_map = double(imread(fname));
+% BP_map = imcrop(BP_map, rect);
 
 if jitter_flag
     jitter_vec = readmatrix(strcat(sampleFolder,'jitter.txt')); %%%%
@@ -88,9 +100,12 @@ parfor idx = 1:num_proj
     flat = flat_idx_pct*flats(:,:,flat_idx) + (1-flat_idx_pct)*flats(:,:,flat_idx+1);
 
     corrected = sample./flat;
-    corrected = flipud(corrected);
+
+    if flip
+        corrected = flipud(corrected);
+    end
     
-    corrected(BP_map == 255) = NaN;
+    % corrected(BP_map == 255) = NaN;
     corrected(corrected == -Inf) = NaN;
     corrected(corrected == Inf) = NaN;
     
@@ -121,8 +136,9 @@ fname = strcat(inFolder,im_name);
 sample = double(imread(fname));
 sample = dark-sample;
 corrected = sample./flat_end;
-% corrected = imcrop(corrected,rect);
-corrected = flipud(corrected);
+if flip
+    corrected = flipud(corrected);
+end
 corrected = fillmissing(corrected,'linear');
 % phase = tie_hom(corrected, E, R1, R2, gamma, px);
 phase = corrected;

@@ -4,15 +4,15 @@ sampleFolder = '..\';
 inFolder = strcat(sampleFolder, 'data\');
 refFolder = strcat(sampleFolder, 'pre_scan\');
 
-exp = '4';
-numFr = 16;
-ly = 2048;
-lx = 2048;
-px = 4.5e-3;
+param_file = strcat(sampleFolder,'scan_parameters.txt');
+
+exp = str(read_param('exp',param_file));
+num_proj = read_param('num_proj ',param_file);
+ang_range = read_param('rotation_angle',param_file);
+
+detector = 'primeBSI';
 
 ref_step = 20; %degrees
-num_proj = 1800;
-ang_range = 360;
 num_refs = ang_range/ref_step;
 
 angles = linspace(0,ang_range,num_proj+1);
@@ -21,7 +21,19 @@ ref_positions = find(~rem(angles,ref_step));
 
 jitter_flag = 0;
 
-rect = [310,310,1439,1439];
+switch detector
+    case 'moment'
+        ly = 2048;
+        lx = 2048;
+        px = 4.5e-3;
+        rect = [310,310,1439,1439];
+
+    case 'primeBSI'
+        ly = 1314;
+        lx = 1314;
+        px = 27.9e-3;
+        rect = [200,200,917,917];
+end
 
 %%
 
