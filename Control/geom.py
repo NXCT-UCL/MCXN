@@ -64,7 +64,7 @@ detector = get_detector(det_name)
 detector.initialise()
 detector.set_exposure_time(exp)
 
-im = detector.acquire_image()
+im = detector.acquire_sequence(numSampleFr)
 fname = filepath + 'Im_Pos_x0_z0.tiff'
 tiff.imsave(fname, im)
 print('######### Pos x0 z0 ##########')
@@ -72,7 +72,7 @@ print('######### Pos x0 z0 ##########')
 AT.AT_move_axis_linear('X',sample_dx)
 time.sleep(2)
 
-im = detector.acquire_image()
+im = detector.acquire_sequence(numSampleFr)
 fname = filepath + 'Im_Pos_x' + dx_str + '_z0.tiff'
 tiff.imsave(fname, im)
 print('######### Pos x1 z0 ##########')
@@ -80,7 +80,7 @@ print('######### Pos x1 z0 ##########')
 AT.AT_move_axis_linear('Y',sample_dz)
 time.sleep(2)
 
-im = detector.acquire_image()
+im = detector.acquire_sequence(numSampleFr)
 fname = filepath + 'Im_Pos_x' + dx_str + '_z' + dz_str + '.tiff'
 tiff.imsave(fname, im)
 print('######### Pos x1 z1 ##########')
@@ -88,7 +88,7 @@ print('######### Pos x1 z1 ##########')
 AT.AT_move_axis_linear('X',-sample_dx)
 time.sleep(2)
 
-im = detector.acquire_image()
+im = detector.acquire_sequence(numSampleFr)
 fname = filepath + 'Im_Pos_x0_z' + dz_str + '.tiff'
 tiff.imsave(fname, im)
 print('######### Pos x0 z1 ##########')
