@@ -1,7 +1,13 @@
+%%
 
-sampleFolder = 'D:\25_04_07\8_MuscleGFPD9_40kv_1p2um\';
+clear;
+
+detector = 'primeBSI';
+th = 0.02;
+
+sampleFolder = '..\';
 inFolder = strcat(sampleFolder,'data\');
-outFolder = strcat(sampleFolder, 'corrected_dyno\');
+outFolder = strcat(sampleFolder, 'corrected_filt2\');
 if ~exist(outFolder)
     mkdir(outFolder);
     disp(['Folder ', outFolder, ' created successfully.']);
@@ -9,62 +15,81 @@ else
     disp(['Folder ', outFolder, ' already exists.']);
 end
 
-num_proj = 4000;
-ang_range = 360;
+param_file = strcat(sampleFolder,'scan_parameters.txt');
 
-exp = '3';
-numFr = 64;
-bin_fact = 1;
-lx = 4096;
-ly = 4096;
-interval_flat = 100;
+exp = num2str(read_param('exp',param_file));
+num_proj = read_param('num_proj ',param_file);
+ang_range = read_param('rotation_angle',param_file);
+numFlatFr = read_param('numFlatFr',param_file);
+interval_flat = read_param('flat_interval',param_file);
 
-rect = [48,48,3999,3999];
+switch detector
+    case 'moment'
+        ly = 2048;
+        lx = 2048;
+        px = 4.5e-3;
+        rect = [310,310,1439,1439];
+        rect(2) = ly-(rect(2)+rect(4));
+        flip = 1;
 
-E = 12;
-R1 = 4.0769;
-R2 = 64.5785-R1;
-gamma = 100;
-px = 8e-3;
+    case 'primeBSI'
+        ly = 1314;
+        lx = 1314;
+        px = 27.9e-3;
+        rect = [200,200,917,917];
+        flip = 0;
+end
 
-ref_step = 9; %degrees
+jitter_flag = 0;
+
+ref_step = 20; %degrees
 ref_step_proj = num_proj/ang_range*ref_step;
 ref_positions = 0:ref_step_proj:num_proj;
 load shifts.mat
 
-fname = strcat(sampleFolder, 'BP_map_STD.tif');
-BP_map = double(imread(fname));
-BP_map = imcrop(BP_map, rect);
+% fname = strcat(sampleFolder, 'BP_map.tif');
+% BP_map = double(imread(fname));
+% BP_map = imcrop(BP_map, rect);
 
-jitter_vec = readmatrix(strcat(sampleFolder,'jitter.txt')); %%%%
-jitter_vec_px = jitter_vec/px; %%%%
+if jitter_flag
+    jitter_vec = readmatrix(strcat(sampleFolder,'jitter.txt')); %%%%
+    jitter_vec_px = jitter_vec/px; %%%%
+else
+    jitter_vec = zeros(1,num_proj);
+    jitter_vec_px = jitter_vec/px; %%%%
+end
 
 dark_names = dir([inFolder,'Dark*']);
 numDarks = length(dark_names);
 darks = zeros(ly,lx,numDarks);
 for idx = 1:numDarks
     fname = strcat(inFolder,dark_names(1).name);
-    darks(:,:,idx) = double(loadRawImage(fname));
+    darks(:,:,idx) = double(imread(fname));
 end
 dark = mean(darks,3);
 % dark = remove_hot_pixels(dark,0.1);
 
-flat_names = dir(fullfile(inFolder,'flat*'));
-flats = zeros(ly,lx,length(flat_names));
-for idx = 1:length(flat_names)
+flat_idc = 0:interval_flat:(num_proj-1);
+flats = zeros(ly,lx,length(flat_idc)+1);
+for idx = 1:length(flat_idc)
     
-    fname = strcat(inFolder,flat_names(idx).name);
-    flats(:,:,idx) = dark-double(loadRawImage(fname));
+    flat_idx = flat_idc(idx);
+    imname = strcat('flat_',exp,'sec_',num2str(numFlatFr),'proj',num2str(flat_idx),'.tiff');
+    fname = strcat(inFolder,imname);
+    flats(:,:,idx) = dark-double(imread(fname));
 
 end
 % flat = remove_hot_pixels(flat,0.1);
+imname = strcat('flat_',exp,'sec_',num2str(numFlatFr),'Fr_proj_end.tiff');
+fname = strcat(inFolder,imname);
+flats(:,:,end) = dark-double(imread(fname));
 flat_end = flats(:,:,end);
 
 parfor idx = 1:num_proj
 
-    im_name = strcat('Im_', (exp), 'sec_proj', num2str(idx-1), '.raw');
+    im_name = strcat('Im_', (exp), 'sec_proj', num2str(idx-1), '.tiff');
     fname = strcat(inFolder,im_name);
-    sample = double(loadRawImage(fname));
+    sample = double(imread(fname));
     % sample = remove_hot_pixels(sample,0.1);
 
     sample = dark-sample;
@@ -74,31 +99,31 @@ parfor idx = 1:num_proj
     flat_idx_pct = 1-rem(idx-1,interval_flat)/interval_flat;
 
     flat = flat_idx_pct*flats(:,:,flat_idx) + (1-flat_idx_pct)*flats(:,:,flat_idx+1);
-    
-    corrected = sample./flat;
-    corrected = imcrop(corrected,rect);
-    corrected = flipud(corrected);
-    
-    corrected = remove_hot_pixels(corrected,1);
 
-    corrected(BP_map == 255) = NaN;
+    corrected = sample./flat;
+
+    if flip
+        corrected = flipud(corrected);
+    end
+    
+    % corrected(BP_map == 255) = NaN;
     corrected(corrected == -Inf) = NaN;
     corrected(corrected == Inf) = NaN;
     
     corrected = fillmissing(corrected,'linear');
     
-    % phase = tie_hom(corrected, E, R1, R2, gamma, px);
-    phase = corrected;
+    corrected = remove_hot_pixels(corrected,th);
 
-    phase = circshift(phase,jitter_vec_px(idx),2); %%%%%
+    corrected = circshift(corrected,jitter_vec_px(idx),2); %%%%%
 
     shift_y = interp1(ref_positions, trany, idx);
     shift_x = interp1(ref_positions, tranx, idx);
     translationMatrix = eye(3);
     translationMatrix([3,6]) = [shift_x,shift_y];
     tform = affine2d(translationMatrix);
-    outputView = imref2d(size(phase)); % Define output view
-    warped = imwarp(phase, tform, 'OutputView', outputView);
+    outputView = imref2d(size(corrected)); % Define output view
+    warped = imwarp(corrected, tform, 'OutputView', outputView);
+    warped = imcrop(warped,rect);
 
     im_name = strcat('proj', num2str(idx), '.tif');
     fname = strcat(outFolder,im_name);
@@ -107,13 +132,14 @@ parfor idx = 1:num_proj
 end
 
 % End Proj
-im_name = strcat('Im_', num2str(exp), 'sec_proj_end.raw');
+im_name = strcat('Im_', num2str(exp), 'sec_proj_end.tiff');
 fname = strcat(inFolder,im_name);
-sample = double(loadRawImage(fname));
+sample = double(imread(fname));
 sample = dark-sample;
 corrected = sample./flat_end;
-corrected = imcrop(corrected,rect);
-corrected = flipud(corrected);
+if flip
+    corrected = flipud(corrected);
+end
 corrected = fillmissing(corrected,'linear');
 % phase = tie_hom(corrected, E, R1, R2, gamma, px);
 phase = corrected;
@@ -128,6 +154,7 @@ translationMatrix([3,6]) = [shift_x,shift_y];
 tform = affine2d(translationMatrix);
 outputView = imref2d(size(phase)); % Define output view
 warped = imwarp(phase, tform, 'OutputView', outputView);
+warped = imcrop(warped,rect);
 im_name = strcat('proj_end', '.tif');
 fname = strcat(outFolder,im_name);
 imwrite2tif(warped, [], fname, 'single');

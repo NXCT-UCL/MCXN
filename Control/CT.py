@@ -21,7 +21,7 @@ import random
 from detectors.factory import get_detector
 import tifffile as tiff
 
-filepath = 'D:/25_08_11/3_ROIphan2Med_50kv_1p2um/'
+filepath = 'D:/25_04_07/8_MuscleGFPD9_40kv_1p2um/'
 Subfolder_name="data/"
 
 newpath = filepath + Subfolder_name
@@ -35,7 +35,7 @@ shutil.copy(__file__, destination)
 
 # Parameters for reference scan
 pre_scan = 1
-pre_scan_step = 20 #degrees, must be multiple of increment
+pre_scan_step = 9 #degrees, must be multiple of increment
 pre_scan_folder = 'pre_scan/'
 newpath = filepath + pre_scan_folder
 if pre_scan:
@@ -43,24 +43,24 @@ if pre_scan:
         os.makedirs(newpath)
 
 
-exp = 2000 #ms
-sample_out_dx = 20 # relative move of sample out, sample_out = AT_x + dx
-num_proj = 1800 # num projections
+exp = 3000 #ms
+sample_out_dx = 5 # relative move of sample out, sample_out = AT_x + dx
+num_proj = 4000 # num projections
 rotation_angle = 360 # angular range
 ESS_start_pos = -8 # rotator pos at proj 0
 start_proj = 0 # can start at projection number start_proj
 direction = -1 # rotation direction
 extra_proj = 1 # bolean, extra projection at ESS_start_pos at end of scan
-flat_interval = 200 # how many proj to take flats 
+flat_interval = 100 # how many proj to take flats 
 numDarkFr = 16 # number of darks, taken 10mins after scan
 numFlatFr = 16 # number of flat frames averaged 
-numSampleFr = 4 # number of sample frames averaged
+numSampleFr = 1 # number of sample frames averaged
 increment = direction*(rotation_angle/num_proj) #rotation increment at each projection
-det_name = 'moment'
+det_name = 'Brillianse'
 
 # Jitter
-jitter_flag = 0
-px = 4.5e-3
+jitter_flag = 1
+px = 8e-3
 jitter_range_px = 20 # number of pixels in max jitter (twice this number)
 if jitter_flag:
     # check if the file exists already (from a previous broken CT for example)
@@ -112,7 +112,7 @@ ESS.ESS_Prep_Move()
 
 # Newport
 NP_xaxis = 1
-NP_zaxis = 3
+NP_zaxis = 2
 NP.NP_init()
 NP_x = NP.NP_gp(NP_xaxis)
 NP_z = NP.NP_gp(NP_zaxis)
@@ -203,7 +203,7 @@ for proj_idx in np.arange(start_proj,num_proj):
         time.sleep(5)
         
         if proj_idx > 0:
-            time.sleep(10)
+            time.sleep(60)
             
         im = detector.acquire_sequence(numFlatFr)
         
@@ -269,7 +269,7 @@ SC.wait_for_state_transition(xcs)
 time.sleep(600)
 # capture dark
 for idx in range(numDarkFr):
-    im = detector.acquire_image()
+    im = detector.acquire_sequence(numFlatFr)
     fname = filepath + Subfolder_name + 'Dark_end_idx' + str(idx) +'.tiff'
     tiff.imsave(fname, im)
 

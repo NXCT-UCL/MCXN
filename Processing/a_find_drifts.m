@@ -1,28 +1,49 @@
 clear;
 
-sampleFolder = 'D:\25_04_07\8_MuscleGFPD9_40kv_1p2um\';
+sampleFolder = '..\';
 inFolder = strcat(sampleFolder, 'data\');
 refFolder = strcat(sampleFolder, 'pre_scan\');
 
-exp = '3';
-numFr = 64;
-ly = 4096;
-lx = 4096;
-px = 8e-3;
+param_file = strcat(sampleFolder,'scan_parameters.txt');
 
-ref_step = 9; %degrees
-num_proj = 4000;
-ang_range = 360;
+exp = num2str(read_param('exp',param_file));
+num_proj = read_param('num_proj ',param_file);
+ang_range = read_param('rotation_angle',param_file);
+
+detector = 'primeBSI';
+
+ref_step = 20; %degrees
 num_refs = ang_range/ref_step;
 
 angles = linspace(0,ang_range,num_proj+1);
 angles = angles(1:end-1);
 ref_positions = find(~rem(angles,ref_step));
 
+jitter_flag = 0;
+
+switch detector
+    case 'moment'
+        ly = 2048;
+        lx = 2048;
+        px = 4.5e-3;
+        rect = [310,310,1439,1439];
+
+    case 'primeBSI'
+        ly = 1314;
+        lx = 1314;
+        px = 27.9e-3;
+        rect = [200,200,917,917];
+end
+
 %%
 
-jitter_vec = readmatrix(strcat(sampleFolder,'jitter.txt')); %%%%
-jitter_vec_px = jitter_vec/px; %%%%
+if jitter_flag
+    jitter_vec = readmatrix(strcat(sampleFolder,'jitter.txt')); %%%%
+    jitter_vec_px = jitter_vec/px; %%%%
+else
+    jitter_vec = zeros(1,num_proj);
+    jitter_vec_px = jitter_vec/px; %%%%
+end
 
 %% Load flat and darks
 
@@ -31,7 +52,7 @@ numDarks = length(dark_names);
 darks = zeros(ly,lx,numDarks);
 for idx = 1:numDarks
     fname = strcat(inFolder,dark_names(1).name);
-    darks(:,:,idx) = double(loadRawImage(fname));
+    darks(:,:,idx) = double(imread(fname));
 end
 dark = mean(darks,3);
 
@@ -40,7 +61,7 @@ numFlats = length(flat_names);
 flats = zeros(ly,lx,numFlats);
 for idx = 1:numFlats
     fname = strcat(inFolder,flat_names(1).name);
-    flats(:,:,idx) = double(loadRawImage(fname));
+    flats(:,:,idx) = double(imread(fname));
 end
 flat = mean(flats,3);
 
@@ -52,14 +73,14 @@ mov_images = zeros(lx,ly,num_refs);
 for idx = 1:num_refs
     
     angle = (idx-1)*ref_step;
-    im_name = strcat('Im_', num2str(angle), '.raw');
+    im_name = strcat('Im_', num2str(angle), '.tiff');
     fname = strcat(refFolder, im_name);
-    ref_images(:,:,idx) = double(loadRawImage(fname));
+    ref_images(:,:,idx) = double(imread(fname));
 
     proj_nm = ref_positions(idx);
-    im_name = strcat('Im_', num2str(exp), 'sec_proj',num2str(proj_nm-1), '.raw');
+    im_name = strcat('Im_', num2str(exp), 'sec_proj',num2str(proj_nm-1), '.tiff');
     fname = strcat(inFolder, im_name);
-    mov_images(:,:,idx) = double(loadRawImage(fname));
+    mov_images(:,:,idx) = double(imread(fname));
 
 end
 
@@ -85,13 +106,13 @@ end
 
 %% start and end
 
-im_name = strcat('Im_', num2str(exp), 'sec_proj0.raw');
+im_name = strcat('Im_', num2str(exp), 'sec_proj0.tiff');
 fname = strcat(inFolder, im_name);
-proj_start = double(loadRawImage(fname));
+proj_start = double(imread(fname));
 
-im_name = strcat('Im_', num2str(exp), 'sec_proj_end.raw');
+im_name = strcat('Im_', num2str(exp), 'sec_proj_end.tiff');
 fname = strcat(inFolder, im_name);
-proj_end = double(loadRawImage(fname));
+proj_end = double(imread(fname));
 
 proj_start = (-proj_start+dark)./(dark-flat);
 proj_end = (-proj_end+dark)./(dark-flat);
@@ -115,6 +136,9 @@ parfor idx = 1:num_refs
     % Read the reference and target images
     fixedImage = ref_images(:,:,idx);   % Reference image
     movingImage = mov_images(:,:,idx); % Image to be registered
+
+    fixedImage = imcrop(fixedImage,rect);
+    movingImage = imcrop(movingImage,rect);
     
     % rm outliers
     fixedImage(fixedImage == -Inf) = 1;
@@ -162,6 +186,9 @@ end
 % Read the reference and target images
 fixedImage = proj_start;   % Reference image
 movingImage = proj_end; % Image to be registered
+
+fixedImage = imcrop(fixedImage,rect);
+movingImage = imcrop(movingImage,rect);
 
 % rm outliers
 fixedImage(fixedImage == -Inf) = 1;
