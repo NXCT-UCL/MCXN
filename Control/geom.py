@@ -17,7 +17,7 @@ import shutil
 import time
 import tifffile as tiff
 
-filepath = 'D:/25_07_29/3_geom/'
+filepath = 'D:/25_08_11/2_geom/'
 
 if not os.path.exists(filepath):
     os.makedirs(filepath)
@@ -27,11 +27,11 @@ script_name = os.path.basename(__file__)
 destination = os.path.join(filepath, script_name)
 shutil.copy(__file__, destination)
 
-exp = 4000 #ms
-sample_dx = 0.5 #mm
+exp = 1000 #ms
+sample_dx = 1.0 #mm
 sample_dz = 1.0 #mm
 numSampleFr = 1
-det_name = 'Moment'
+det_name = 'primeBSI'
 
 print("Exposure time:", exp*numSampleFr)
 print("Number of Frames:", numSampleFr)
