@@ -38,6 +38,9 @@ switch detector
         flip = 0;
 end
 
+% boundary addition
+rect = rect + [50,50,-100,-100];
+
 %%
 
 if jitter_flag
