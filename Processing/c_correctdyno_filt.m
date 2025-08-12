@@ -28,7 +28,7 @@ switch detector
         ly = 2048;
         lx = 2048;
         px = 4.5e-3;
-        rect = [310,310,1439,1439];
+        rect = [305,305,1439,1439];
         rect(2) = ly-(rect(2)+rect(4));
         flip = 1;
 

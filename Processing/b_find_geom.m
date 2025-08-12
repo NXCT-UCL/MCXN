@@ -16,7 +16,7 @@ Mag = 2; % rough guess
 switch detector
     case 'moment'
         px = 4.5e-3;
-        rect = [310,310,1439,1439];
+        rect = [305,305,1439,1439];
 
     case 'primeBSI'
         px = 27.9e-3;
