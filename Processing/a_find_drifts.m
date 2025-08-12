@@ -130,7 +130,7 @@ parfor idx = 1:num_refs
     movingImage(movingImage == Inf) = 1;
 
     % match histogram
-    movingImage = imhistmatch(movingImage, fixedImage);
+    % movingImage = imhistmatch(movingImage, fixedImage);
     
     % Apply Gaussian blur to both images
     fixedImageBlurred = imgaussfilt(fixedImage, 2);
@@ -198,7 +198,7 @@ movingImage(movingImage == -Inf) = 1;
 movingImage(movingImage == Inf) = 1;
 
 % match histogram
-movingImage = imhistmatch(movingImage, fixedImage);
+% movingImage = imhistmatch(movingImage, fixedImage);
 
 % Apply Gaussian blur to both images
 fixedImageBlurred = imgaussfilt(fixedImage, 2);
