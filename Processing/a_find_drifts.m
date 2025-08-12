@@ -9,6 +9,7 @@ param_file = strcat(sampleFolder,'scan_parameters.txt');
 exp = num2str(read_param('exp',param_file));
 num_proj = read_param('num_proj ',param_file);
 ang_range = read_param('rotation_angle',param_file);
+extra_proj = read_param('extra_proj',param_file);
 
 detector = 'primeBSI';
 
@@ -26,13 +27,15 @@ switch detector
         ly = 2048;
         lx = 2048;
         px = 4.5e-3;
-        rect = [310,310,1439,1439];
+        rect = [305,305,1439,1439];
+        flip = 1;
 
     case 'primeBSI'
         ly = 1314;
         lx = 1314;
         px = 27.9e-3;
         rect = [200,200,917,917];
+        flip = 0;
 end
 
 %%
@@ -92,8 +95,10 @@ mov_images = (-mov_images+dark)./(dark-flat);
 ref_images = fillmissing(ref_images,'linear');
 mov_images = fillmissing(mov_images,'linear');
 
-ref_images = flipud(ref_images);
-mov_images = flipud(mov_images);
+if flip 
+    ref_images = flipud(ref_images);
+    mov_images = flipud(mov_images);
+end
 
 %% jitter
 
@@ -103,28 +108,6 @@ for idx = 1:num_refs
     mov_images(:,:,idx) = circshift(mov_images(:,:,idx),jitter_vec_px(proj_nm),2); %%%%%
 
 end
-
-%% start and end
-
-im_name = strcat('Im_', num2str(exp), 'sec_proj0.tiff');
-fname = strcat(inFolder, im_name);
-proj_start = double(imread(fname));
-
-im_name = strcat('Im_', num2str(exp), 'sec_proj_end.tiff');
-fname = strcat(inFolder, im_name);
-proj_end = double(imread(fname));
-
-proj_start = (-proj_start+dark)./(dark-flat);
-proj_end = (-proj_end+dark)./(dark-flat);
-
-proj_start = fillmissing(proj_start,'linear');
-proj_end = fillmissing(proj_end,'linear');
-
-proj_start = flipud(proj_start);
-proj_end = flipud(proj_end);
-
-proj_start = circshift(proj_start,jitter_vec_px(1),2);
-proj_end = circshift(proj_end,jitter_vec_px(end),2);
 
 %%
 
@@ -182,9 +165,27 @@ parfor idx = 1:num_refs
     
     % waitforbuttonpress;
 end
-%%
+
+%% end
+
+if extra_proj
+
+im_name = strcat('Im_', num2str(exp), 'sec_proj_end.tiff');
+fname = strcat(inFolder, im_name);
+proj_end = double(imread(fname));
+
+proj_end = (-proj_end+dark)./(dark-flat);
+
+proj_end = fillmissing(proj_end,'linear');
+
+if flip 
+    proj_end = flipud(proj_end);
+end
+
+proj_end = circshift(proj_end,jitter_vec_px(end),2);
+
 % Read the reference and target images
-fixedImage = proj_start;   % Reference image
+fixedImage = ref_images(:,:,1);   % Reference image
 movingImage = proj_end; % Image to be registered
 
 fixedImage = imcrop(fixedImage,rect);
@@ -229,6 +230,9 @@ fprintf('Translation in Y direction: %.2f pixels\n', translationY);
 
 tranx(end+1) = translationX;
 trany(end+1) = translationY;
+
+end
+
 %%
 figure;
 plot([angles(ref_positions),360], tranx, 'DisplayName', 'Horizontal');
