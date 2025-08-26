@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCXN.tv</title>
+    <style>
+        
+        body {
+            background-color: #001f3f;
+            color: white;
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            margin-top: 20px;
+        }
+        img {
+            border: 2px solid white;
+            margin-top: 20px;
+        }
+        .button {
+            background-color: #0074D9;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        }
+        .text {
+            font-size: 20px;
+            padding-left: 20px;
+            float: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="image">
+            <img src="MCXN_logo.png" width="160" alt="MCXN Logo">
+        </div>
+        <div class="text">
+            <h1>MCXN.tv</h1>
+        </div>
+    </div>
+    <br>
+    <img id="videoStream" src="stream.mjpg" width="800" height="600" style="display: none;" />
+    <br>
+    <button class="button" onclick="toggleStream()">Start Stream</button>
+    <button class="button" onclick="triggerAutofocus()">Autofocus</button>
+    <button class="button" onclick="toggleIR()">Toggle IR LED</button>
+    <p>Temperature: <span id="temp">Loading...</span> °C</p>
+    
+    <script>
+        let streaming = false;
+        function toggleStream() {
+            let img = document.getElementById("videoStream");
+            if (streaming) {
+                img.style.display = "none";
+                streaming = false;
+            } else {
+                img.style.display = "block";
+                streaming = true;
+            }
+        }
+        
+        function triggerAutofocus() {
+            fetch('/autofocus')
+                .then(response => response.text())
+                .catch(error => console.error('Error triggering autofocus:', error));
+        }
+      async function fetchTemp() {
+        try {
+          const res = await fetch('/temperature');
+          const data = await res.json();
+          document.getElementById('temp').innerText = data.temp_c.toFixed(1);
+        } catch (err) {
+          document.getElementById('temp').innerText = 'Error';
+        }
+      }
+      fetchTemp();
+      setInterval(fetchTemp, 60000); // Update every minute
+        function toggleIR() {
+            fetch('/toggle_ir')
+              .then(response => response.text())
+              .then(text => console.log(text));
+        }
+    </script>
+</body>
+</html>
