@@ -28,8 +28,7 @@ switch detector
         ly = 2048;
         lx = 2048;
         px = 4.5e-3;
-        rect = [310,310,1439,1439];
-        rect(2) = ly-(rect(2)+rect(4));
+        rect = [305,305,1439,1439];
         flip = 1;
 
     case 'primeBSI'
@@ -42,7 +41,7 @@ end
 
 jitter_flag = 0;
 
-ref_step = 20; %degrees
+ref_step = 120; %degrees
 ref_step_proj = num_proj/ang_range*ref_step;
 ref_positions = 0:ref_step_proj:num_proj;
 load shifts.mat
@@ -91,47 +90,55 @@ parfor idx = 1:num_proj
     fname = strcat(inFolder,im_name);
     sample = double(imread(fname));
     % sample = remove_hot_pixels(sample,0.1);
-
+    
+    % Remove Dark
     sample = dark-sample;
     sample = fillmissing(sample,'linear');
     
+    % Find Flat
     flat_idx = ceil(idx/interval_flat);
     flat_idx_pct = 1-rem(idx-1,interval_flat)/interval_flat;
-
     flat = flat_idx_pct*flats(:,:,flat_idx) + (1-flat_idx_pct)*flats(:,:,flat_idx+1);
 
+    % Correct warped sample image with unwarped flat
     corrected = sample./flat;
 
     if flip
         corrected = flipud(corrected);
     end
-    
+
+    % Correct bad pixels
     % corrected(BP_map == 255) = NaN;
     corrected(corrected == -Inf) = NaN;
     corrected(corrected == Inf) = NaN;
-    
     corrected = fillmissing(corrected,'linear');
-    
     corrected = remove_hot_pixels(corrected,th);
 
-    corrected = circshift(corrected,jitter_vec_px(idx),2); %%%%%
+    % Jitter
+    corrected = circshift(corrected,jitter_vec_px(idx),2); 
 
-    shift_y = interp1(ref_positions, trany, idx);
-    shift_x = interp1(ref_positions, tranx, idx);
+    % Warp sample image that has drifted
+    shift_y = interp1(ref_positions, trany, idx-1);
+    shift_x = interp1(ref_positions, tranx, idx-1);
     translationMatrix = eye(3);
     translationMatrix([3,6]) = [shift_x,shift_y];
     tform = affine2d(translationMatrix);
     outputView = imref2d(size(corrected)); % Define output view
-    warped = imwarp(corrected, tform, 'OutputView', outputView);
-    warped = imcrop(warped,rect);
+    corrected = imwarp(corrected, tform, 'OutputView', outputView);
 
+    % Crop
+    corrected = imcrop(corrected,rect);
+
+    % Save
     im_name = strcat('proj', num2str(idx), '.tif');
     fname = strcat(outFolder,im_name);
-    imwrite2tif(warped, [], fname, 'single');
+    imwrite2tif(corrected, [], fname, 'single');
 
 end
 
-% End Proj
+%% End Projection
+
+% Load and dark removal
 im_name = strcat('Im_', num2str(exp), 'sec_proj_end.tiff');
 fname = strcat(inFolder,im_name);
 sample = double(imread(fname));
@@ -140,21 +147,30 @@ corrected = sample./flat_end;
 if flip
     corrected = flipud(corrected);
 end
+
+% Remove bad pixels
+% corrected(BP_map == 255) = NaN;
+corrected(corrected == -Inf) = NaN;
+corrected(corrected == Inf) = NaN;
 corrected = fillmissing(corrected,'linear');
-% phase = tie_hom(corrected, E, R1, R2, gamma, px);
-phase = corrected;
-phase = circshift(phase,jitter_vec_px(end),2);
-scale_fact = (num_proj-num_proj/2)/num_proj;
-drift_y = trany(end);
-drift_x = tranx(end);
-shift_y = scale_fact*drift_y;
-shift_x = scale_fact*drift_x;
+corrected = remove_hot_pixels(corrected,th);
+
+% Jitter
+corrected = circshift(corrected,jitter_vec_px(end),2);
+
+% Warp
+shift_y = trany(end);
+shift_x = tranx(end);
 translationMatrix = eye(3);
 translationMatrix([3,6]) = [shift_x,shift_y];
 tform = affine2d(translationMatrix);
-outputView = imref2d(size(phase)); % Define output view
-warped = imwarp(phase, tform, 'OutputView', outputView);
+outputView = imref2d(size(corrected)); % Define output view
+warped = imwarp(corrected, tform, 'OutputView', outputView);
+
+% Crop
 warped = imcrop(warped,rect);
+
+% Save
 im_name = strcat('proj_end', '.tif');
 fname = strcat(outFolder,im_name);
 imwrite2tif(warped, [], fname, 'single');
