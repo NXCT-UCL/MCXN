@@ -2,7 +2,7 @@
 
 clear;
 
-detector = 'primeBSI';
+detector = 'moment';
 th = 0.02;
 
 sampleFolder = '..\';
@@ -30,6 +30,7 @@ switch detector
         px = 4.5e-3;
         rect = [305,305,1439,1439];
         flip = 1;
+        jitter_dir = -1;
 
     case 'primeBSI'
         ly = 1314;
@@ -37,11 +38,12 @@ switch detector
         px = 27.9e-3;
         rect = [200,200,917,917];
         flip = 0;
+        jitter_dir = 1;
 end
 
-jitter_flag = 0;
+jitter_flag = 1;
 
-ref_step = 120; %degrees
+ref_step = 20; %degrees
 ref_step_proj = num_proj/ang_range*ref_step;
 ref_positions = 0:ref_step_proj:num_proj;
 load shifts.mat
@@ -52,10 +54,10 @@ load shifts.mat
 
 if jitter_flag
     jitter_vec = readmatrix(strcat(sampleFolder,'jitter.txt')); %%%%
-    jitter_vec_px = jitter_vec/px; %%%%
+    jitter_vec_px = jitter_dir*round(jitter_vec/px); %%%%
 else
     jitter_vec = zeros(1,num_proj);
-    jitter_vec_px = jitter_vec/px; %%%%
+    jitter_vec_px = jitter_dir*round(jitter_vec/px); %%%%
 end
 
 dark_names = dir([inFolder,'Dark*']);

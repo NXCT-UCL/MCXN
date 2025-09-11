@@ -23,7 +23,7 @@ switch detector
         rect = [200,200,917,917];
 end
 
-guess_dx = -dx/(px/M);
+guess_dx = -dx/(px/Mag);
 
 ff = dir([flatFolder,'data/*dark*']);
 fname = strcat(flatFolder,'data\',ff(1).name);
