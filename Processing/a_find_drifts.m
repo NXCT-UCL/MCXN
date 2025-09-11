@@ -29,6 +29,7 @@ switch detector
         px = 4.5e-3;
         rect = [305,305,1439,1439];
         flip = 1;
+        jitter_dir = -1;
 
     case 'primeBSI'
         ly = 1314;
@@ -36,6 +37,7 @@ switch detector
         px = 27.9e-3;
         rect = [200,200,917,917];
         flip = 0;
+        jitter_dir = 1;
 end
 
 % boundary addition
@@ -45,10 +47,10 @@ rect = rect + [50,50,-100,-100];
 
 if jitter_flag
     jitter_vec = readmatrix(strcat(sampleFolder,'jitter.txt')); %%%%
-    jitter_vec_px = jitter_vec/px; %%%%
+    jitter_vec_px = jitter_dir*round(jitter_vec/px); %%%%
 else
     jitter_vec = zeros(1,num_proj);
-    jitter_vec_px = jitter_vec/px; %%%%
+    jitter_vec_px = jitter_dir*round(jitter_vec/px); %%%%
 end
 
 %% Load flat and darks
