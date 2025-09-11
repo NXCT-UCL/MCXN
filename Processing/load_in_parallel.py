@@ -22,8 +22,8 @@ from multiprocessing import Pool
 
 # Setup folder paths and constants
 sampleFolder = r'D:\25_04_07\8_MuscleGFPD9_40kv_1p2um'
-inFolder = os.path.join(sampleFolder, 'phase1000_dyno_filt')
-outFolder = os.path.join(sampleFolder, 'recon_pag1000')
+inFolder = os.path.join(sampleFolder, 'phase')
+outFolder = os.path.join(sampleFolder, 'recon')
 checkFolder = os.path.join(outFolder, 'checkpoints')
 os.makedirs(outFolder, exist_ok=True)
 os.makedirs(checkFolder, exist_ok=True)
@@ -36,6 +36,7 @@ ly = 4000
 angular_range = 360
 num_proj = 4000
 px = 8e-3
+rot_dir = -1
 
 # Get the list of TIFF files
 file_list = [f for f in os.listdir(inFolder) if f.endswith('.tif')]
@@ -92,7 +93,7 @@ if __name__ == '__main__':
     ag = AcquisitionGeometry.create_Cone3D(source_position=[0, -Z_so, 0],
                                             detector_position=[0, Z_sd - Z_so, 0],
                                             units='mm').set_panel(num_pixels=[lx, ly], pixel_size=px)\
-        .set_angles(angles=np.linspace(0,angular_range,num_proj+1)[0:-1])
+        .set_angles(angles=rot_dir*np.linspace(0,angular_range,num_proj+1)[0:-1])
     Acq_data = AcquisitionData(data, geometry=ag, deep_copy=True)
     del data
 
@@ -117,9 +118,9 @@ if __name__ == '__main__':
 
     ig = Acq_data.geometry.get_ImageGeometry()
     
-    ig.voxel_num_x = 3000
-    ig.voxel_num_y = 3000
-    ig.voxel_num_z = 3800
+    ig.voxel_num_x = lx
+    ig.voxel_num_y = lx
+    ig.voxel_num_z = ly
     
     print('Recon...')
     fdk =  FDK(Acq_data, ig)
