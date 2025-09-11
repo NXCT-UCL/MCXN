@@ -20,8 +20,10 @@ import newport_functions as NP
 import random
 from detectors.factory import get_detector
 import tifffile as tiff
+import paramiko
+import pandas as pd
 
-filepath = 'D:/25_08_11/3_ROIphan2Med_50kv_1p2um/'
+filepath = 'D:/25_09_11/4_test/'
 Subfolder_name="data/"
 
 newpath = filepath + Subfolder_name
@@ -34,7 +36,7 @@ destination = os.path.join(filepath, script_name)
 shutil.copy(__file__, destination)
 
 # Parameters for reference scan
-pre_scan = 1
+pre_scan = 0
 pre_scan_step = 20 #degrees, must be multiple of increment
 pre_scan_folder = 'pre_scan/'
 newpath = filepath + pre_scan_folder
@@ -44,19 +46,20 @@ if pre_scan:
 
 
 exp = 2000 #ms
-sample_out_dx = 20 # relative move of sample out, sample_out = AT_x + dx
-num_proj = 1800 # num projections
+sample_out_dx = 1 # relative move of sample out, sample_out = AT_x + dx
+num_proj = 1 # num projections
 rotation_angle = 360 # angular range
 ESS_start_pos = -8 # rotator pos at proj 0
 start_proj = 0 # can start at projection number start_proj
 direction = -1 # rotation direction
 extra_proj = 1 # bolean, extra projection at ESS_start_pos at end of scan
-flat_interval = 200 # how many proj to take flats 
-numDarkFr = 16 # number of darks, taken 10mins after scan
-numFlatFr = 16 # number of flat frames averaged 
-numSampleFr = 4 # number of sample frames averaged
+flat_interval = 0 # how many proj to take flats 
+numDarkFr = 1 # number of darks, taken 10mins after scan
+numFlatFr = 1 # number of flat frames averaged 
+numSampleFr = 1 # number of sample frames averaged
 increment = direction*(rotation_angle/num_proj) #rotation increment at each projection
 det_name = 'moment'
+
 
 # Jitter
 jitter_flag = 0
@@ -91,9 +94,10 @@ if jitter_flag:
             jitter_file.write( str(j) + '\n')
             jitter_file.close()
 
+est_time = num_proj*exp*numSampleFr/60/1000
 print("Exposure time:", exp*numSampleFr)
 print("Number of projections:", num_proj)
-print("Total exposure time (mins):", num_proj*exp*numSampleFr/60/1000)
+print("Total exposure time (mins):", est_time)
 
 # Start Aerotech
 AT.AT_connect()
@@ -191,9 +195,9 @@ if pre_scan:
 
         print('######### Pre Scan Angle: '+str(angle) + ' ##########')
 
-AT.AT_move_axis_linear('X',sample_out_dx)
-time.sleep(60)
-AT.AT_move_axis_linear('X',-sample_out_dx)
+# AT.AT_move_axis_linear('X',sample_out_dx)
+# time.sleep(10)
+# AT.AT_move_axis_linear('X',-sample_out_dx)
     
 #################################################
 for proj_idx in np.arange(start_proj,num_proj):
@@ -205,10 +209,10 @@ for proj_idx in np.arange(start_proj,num_proj):
         if proj_idx > 0:
             time.sleep(10)
             
-        im = detector.acquire_sequence(numFlatFr)
-        
-        fname = filepath + Subfolder_name + 'flat_' + exp_str + 'sec_' + str(numFlatFr) + 'proj' + str(proj_idx) + '.tiff'
-        tiff.imsave(fname, im)
+        for idx_fr in range(numFlatFr):
+            im = detector.acquire_image()
+            fname = filepath + Subfolder_name + 'Flat_proj' + str(proj_idx) + '_fr' + str(idx_fr) + '.tiff'
+            tiff.imsave(fname, im)
                 
         AT.AT_move_axis_linear('X',-sample_out_dx)
     
@@ -223,11 +227,11 @@ for proj_idx in np.arange(start_proj,num_proj):
     Step_position = ESS_start_pos+proj_idx*increment
     ESS.ESS_Absolute_Move(Step_position) #rotation
     posRot=np.append(posRot,ESS.ESS_Position())
-
-    im = detector.acquire_sequence(numSampleFr)
     
-    fname = filepath + Subfolder_name + 'Im_' + exp_str + 'sec_' + 'proj' + str(proj_idx) + '.tiff'
-    tiff.imsave(fname, im)
+    for idx_fr in range(numSampleFr):
+        im = detector.acquire_image()
+        fname = filepath + Subfolder_name + 'Im_proj' + str(proj_idx) + '_fr' + str(idx_fr) + '.tiff'
+        tiff.imsave(fname, im)
     
     print('######### Projection '+str(proj_idx) + ' ##########')
     np.savetxt(filepath+Subfolder_name+'/RotatorPositionLog.txt',posRot)
@@ -241,19 +245,21 @@ if extra_proj:
         ESS.ESS_Absolute_Move(Step_position) #rotation
         posRot=np.append(posRot,ESS.ESS_Position())
         im = detector.acquire_sequence(numSampleFr)
-        fname = filepath + Subfolder_name + 'Im_' + exp_str + 'sec_' + 'proj_end.tiff'
+        fname = filepath + Subfolder_name + 'Im_proj_end.tiff'
         tiff.imsave(fname, im)
 
 ##### End flat
 AT.AT_move_axis_linear('X',sample_out_dx)
 time.sleep(5)
-im = detector.acquire_sequence(numFlatFr)
-fname = filepath + Subfolder_name + 'flat_' + exp_str + 'sec_' + str(numFlatFr) + 'Fr_proj_end.tiff'
-tiff.imsave(fname, im)
+for idx_fr in range(numFlatFr):
+    im = detector.acquire_image()
+    fname = filepath + Subfolder_name + 'Flat_proj_end_fr' + str(idx_fr) + '.tiff'
+    tiff.imsave(fname, im)
 AT.AT_move_axis_linear('X',-sample_out_dx)
 time.sleep(5)
 #####
 
+ESS.ESS_Reset()
 ESS.ESS_Close()
 PS.PS_Close(PS_socket)
 ########################################################################
@@ -266,14 +272,37 @@ print(rec)
 assert rec == "ok\n", "failed to set 'ready' state as target"
 SC.wait_for_state_transition(xcs)
 
-time.sleep(600)
+time.sleep(10)
 # capture dark
 for idx in range(numDarkFr):
     im = detector.acquire_image()
     fname = filepath + Subfolder_name + 'Dark_end_idx' + str(idx) +'.tiff'
     tiff.imsave(fname, im)
 
-
 detector.shutdown()
+
+#Get Temp
+# connection details
+hostname = "128.40.160.22"   # or use the IP address
+username = "mcxntv"
+remote_file = "/home/mcxntv/temp_probe/temperature_log.csv"
+local_file = "D:/temperature_log.csv"
+last_n = 2*int(np.round(est_time))
+output_file = os.path.join(filepath,"temp.csv")
+# connect to Raspberry Pi
+ssh = paramiko.SSHClient()
+ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+ssh.connect(hostname, username=username)  # no password needed now with SSH keys
+# copy the full CSV to local machine
+sftp = ssh.open_sftp()
+sftp.get(remote_file, local_file)
+sftp.close()
+ssh.close()
+# read only last N rows
+df = pd.read_csv(local_file)
+last_rows = df.tail(last_n)
+# save to new local CSV
+last_rows.to_csv(output_file, index=False, header=False)
+print(f"Saved the last {last_n} mins to {output_file}")
 
 print('######## FINISHED ########')
