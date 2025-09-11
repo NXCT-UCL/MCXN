@@ -1,8 +1,8 @@
 clear;
 
 sampleFolder = '..\';
-inFolder = strcat(sampleFolder,'corrected_filt2\');
-outFolder = strcat(sampleFolder, 'phase_filt2\');
+inFolder = strcat(sampleFolder,'corrected\');
+outFolder = strcat(sampleFolder, 'phase\');
 if ~exist(outFolder)
     mkdir(outFolder);
     disp(['Folder ', outFolder, ' created successfully.']);

@@ -1,6 +1,6 @@
 clear;
 
-sampleFolder = '..\';
+sampleFolder = 'D:\25_09_11\3_test\';
 inFolder = strcat(sampleFolder, 'data\');
 refFolder = strcat(sampleFolder, 'pre_scan\');
 
@@ -11,7 +11,7 @@ num_proj = read_param('num_proj ',param_file);
 ang_range = read_param('rotation_angle',param_file);
 extra_proj = read_param('extra_proj',param_file);
 
-detector = 'primeBSI';
+detector = 'moment';
 
 ref_step = 20; %degrees
 num_refs = ang_range/ref_step;
@@ -73,7 +73,7 @@ for idx = 1:numFlats
 end
 flat = mean(flats,3);
 
-%%
+%% Load all images - only the first frame of the full scan 
 
 ref_images = zeros(lx,ly,num_refs);
 mov_images = zeros(lx,ly,num_refs);
@@ -86,7 +86,7 @@ for idx = 1:num_refs
     ref_images(:,:,idx) = double(imread(fname));
 
     proj_nm = ref_positions(idx);
-    im_name = strcat('Im_', num2str(exp), 'sec_proj',num2str(proj_nm-1), '.tiff');
+    im_name = strcat('Im_proj',num2str(proj_nm-1), '_fr0.tiff');
     fname = strcat(inFolder, im_name);
     mov_images(:,:,idx) = double(imread(fname));
 
@@ -175,7 +175,7 @@ end
 
 if extra_proj
 
-im_name = strcat('Im_', num2str(exp), 'sec_proj_end.tiff');
+im_name = strcat('Im_proj_end.tiff');
 fname = strcat(inFolder, im_name);
 proj_end = double(imread(fname));
 

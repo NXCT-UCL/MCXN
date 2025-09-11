@@ -7,7 +7,7 @@ th = 0.02;
 
 sampleFolder = '..\';
 inFolder = strcat(sampleFolder,'data\');
-outFolder = strcat(sampleFolder, 'corrected_filt2\');
+outFolder = strcat(sampleFolder, 'corrected\');
 if ~exist(outFolder)
     mkdir(outFolder);
     disp(['Folder ', outFolder, ' created successfully.']);
@@ -21,6 +21,7 @@ exp = num2str(read_param('exp',param_file));
 num_proj = read_param('num_proj ',param_file);
 ang_range = read_param('rotation_angle',param_file);
 numFlatFr = read_param('numFlatFr',param_file);
+numSampleFr = read_param('numSampleFr',param_file);
 interval_flat = read_param('flat_interval',param_file);
 
 switch detector
@@ -41,7 +42,7 @@ switch detector
         jitter_dir = 1;
 end
 
-jitter_flag = 1;
+jitter_flag = 0;
 
 ref_step = 20; %degrees
 ref_step_proj = num_proj/ang_range*ref_step;
@@ -68,30 +69,43 @@ for idx = 1:numDarks
     darks(:,:,idx) = double(imread(fname));
 end
 dark = mean(darks,3);
-% dark = remove_hot_pixels(dark,0.1);
 
+% Load Flats
 flat_idc = 0:interval_flat:(num_proj-1);
 flats = zeros(ly,lx,length(flat_idc)+1);
 for idx = 1:length(flat_idc)
     
     flat_idx = flat_idc(idx);
-    imname = strcat('flat_',exp,'sec_',num2str(numFlatFr),'proj',num2str(flat_idx),'.tiff');
-    fname = strcat(inFolder,imname);
-    flats(:,:,idx) = dark-double(imread(fname));
+    
+    flat_fr = zeros(ly,lx,numFlatFr);
+    for idx_fr = 1:numFlatFr
+        im_name = strcat('Flat_proj',num2str(flat_idx),'_fr',num2str(idx_fr-1),'.tiff');
+        fname = strcat(inFolder,im_name);
+        flat_fr(:,:,idx_fr) = double(imread(fname));
+    end
+    
+    flats(:,:,idx) = dark-mean(flat_fr,3);
 
 end
-% flat = remove_hot_pixels(flat,0.1);
-imname = strcat('flat_',exp,'sec_',num2str(numFlatFr),'Fr_proj_end.tiff');
-fname = strcat(inFolder,imname);
-flats(:,:,end) = dark-double(imread(fname));
+for idx_fr = 1:numFlatFr
+    im_name = strcat('Flat_proj_end_fr',num2str(idx_fr-1),'.tiff');
+    fname = strcat(inFolder,im_name);
+    flat_fr(:,:,idx_fr) = double(imread(fname));
+end
+flats(:,:,end) = dark-mean(flat_fr,3);
 flat_end = flats(:,:,end);
 
-parfor idx = 1:num_proj
 
-    im_name = strcat('Im_', (exp), 'sec_proj', num2str(idx-1), '.tiff');
-    fname = strcat(inFolder,im_name);
-    sample = double(imread(fname));
-    % sample = remove_hot_pixels(sample,0.1);
+%%
+for idx = 1:num_proj
+
+    sample_fr = zeros(ly,lx,numSampleFr);
+    for idx_fr = 1:numSampleFr
+        im_name = strcat('Im_proj', num2str(idx-1), '_fr',num2str(idx_fr-1),'.tiff');
+        fname = strcat(inFolder,im_name);
+        sample_fr(:,:,idx_fr) = double(imread(fname));
+    end
+    sample = mean(sample_fr,3);
     
     % Remove Dark
     sample = dark-sample;
@@ -141,7 +155,7 @@ end
 %% End Projection
 
 % Load and dark removal
-im_name = strcat('Im_', num2str(exp), 'sec_proj_end.tiff');
+im_name = strcat('Im_proj_end.tiff');
 fname = strcat(inFolder,im_name);
 sample = double(imread(fname));
 sample = dark-sample;
