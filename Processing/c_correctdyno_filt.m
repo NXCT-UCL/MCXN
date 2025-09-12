@@ -97,7 +97,7 @@ flat_end = flats(:,:,end);
 
 
 %%
-for idx = 1:num_proj
+parfor idx = 1:num_proj
 
     sample_fr = zeros(ly,lx,numSampleFr);
     for idx_fr = 1:numSampleFr

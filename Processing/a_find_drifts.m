@@ -1,6 +1,6 @@
 clear;
 
-sampleFolder = 'D:\25_09_11\3_test\';
+sampleFolder = '..\';
 inFolder = strcat(sampleFolder, 'data\');
 refFolder = strcat(sampleFolder, 'pre_scan\');
 
