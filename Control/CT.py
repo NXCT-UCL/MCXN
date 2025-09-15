@@ -23,7 +23,7 @@ import tifffile as tiff
 import paramiko
 import pandas as pd
 
-filepath = 'D:/25_09_11/4_test/'
+filepath = 'D:/25_09_15/2_Lymph70/'
 Subfolder_name="data/"
 
 newpath = filepath + Subfolder_name
@@ -36,7 +36,7 @@ destination = os.path.join(filepath, script_name)
 shutil.copy(__file__, destination)
 
 # Parameters for reference scan
-pre_scan = 0
+pre_scan = 1
 pre_scan_step = 20 #degrees, must be multiple of increment
 pre_scan_folder = 'pre_scan/'
 newpath = filepath + pre_scan_folder
@@ -46,23 +46,23 @@ if pre_scan:
 
 
 exp = 2000 #ms
-sample_out_dx = 1 # relative move of sample out, sample_out = AT_x + dx
-num_proj = 1 # num projections
+sample_out_dx = 5 # relative move of sample out, sample_out = AT_x + dx
+num_proj = 1800 # num projections
 rotation_angle = 360 # angular range
 ESS_start_pos = -8 # rotator pos at proj 0
 start_proj = 0 # can start at projection number start_proj
 direction = -1 # rotation direction
 extra_proj = 1 # bolean, extra projection at ESS_start_pos at end of scan
-flat_interval = 0 # how many proj to take flats 
-numDarkFr = 1 # number of darks, taken 10mins after scan
-numFlatFr = 1 # number of flat frames averaged 
-numSampleFr = 1 # number of sample frames averaged
+flat_interval = 200 # how many proj to take flats 
+numDarkFr = 12 # number of darks, taken 10mins after scan
+numFlatFr = 12 # number of flat frames averaged 
+numSampleFr = 4 # number of sample frames averaged
 increment = direction*(rotation_angle/num_proj) #rotation increment at each projection
 det_name = 'moment'
 
 
 # Jitter
-jitter_flag = 0
+jitter_flag = 1
 px = 4.5e-3
 jitter_range_px = 20 # number of pixels in max jitter (twice this number)
 if jitter_flag:
@@ -77,7 +77,7 @@ if jitter_flag:
         if lines != num_proj:
             jitter_sequence = [random.randrange(-jitter_range_px,jitter_range_px,1) for i in range(num_proj)]
             jitter_sequence = np.array(jitter_sequence)*px 
-            jitter_sequence[0] = 0
+            jitter_sequence[np.arange(0,num_proj+1,flat_interval)] = 0
             jitter_file = open(filepath + '/jitter.txt','w')
             for j in jitter_sequence:
                 jitter_file.write( str(j) + '\n')
@@ -88,7 +88,7 @@ if jitter_flag:
     else:
         jitter_sequence = [random.randrange(-jitter_range_px,jitter_range_px,1) for i in range(num_proj)]
         jitter_sequence = np.array(jitter_sequence)*px
-        jitter_sequence[0] = 0
+        jitter_sequence[np.arange(0,num_proj+1,flat_interval)] = 0
         jitter_file = open(filepath + '/jitter.txt','w')
         for j in jitter_sequence:
             jitter_file.write( str(j) + '\n')
@@ -206,6 +206,9 @@ for proj_idx in np.arange(start_proj,num_proj):
         AT.AT_move_axis_linear('X',sample_out_dx)
         time.sleep(5)
         
+        if jitter_flag:
+            NP.NP_ma(NP_xaxis, NP_x)
+        
         if proj_idx > 0:
             time.sleep(10)
             
@@ -228,10 +231,15 @@ for proj_idx in np.arange(start_proj,num_proj):
     ESS.ESS_Absolute_Move(Step_position) #rotation
     posRot=np.append(posRot,ESS.ESS_Position())
     
-    for idx_fr in range(numSampleFr):
-        im = detector.acquire_image()
-        fname = filepath + Subfolder_name + 'Im_proj' + str(proj_idx) + '_fr' + str(idx_fr) + '.tiff'
-        tiff.imsave(fname, im)
+    # for idx_fr in range(numSampleFr):
+    #     im = detector.acquire_image()
+    #     fname = filepath + Subfolder_name + 'Im_proj' + str(proj_idx) + '_fr' + str(idx_fr) + '.tiff'
+    #     tiff.imsave(fname, im)
+        
+    im = detector.acquire_sequence(numSampleFr)
+
+    fname = filepath + Subfolder_name + 'Im_proj' + str(proj_idx) + '.tiff'
+    tiff.imsave(fname, im)
     
     print('######### Projection '+str(proj_idx) + ' ##########')
     np.savetxt(filepath+Subfolder_name+'/RotatorPositionLog.txt',posRot)
@@ -240,6 +248,9 @@ for proj_idx in np.arange(start_proj,num_proj):
 if extra_proj:
     
     Step_position = ESS_start_pos
+    
+    if jitter_flag:
+        NP.NP_ma(NP_xaxis, NP_x)
 
     if PS.PS_check_pressure(PS_socket):
         ESS.ESS_Absolute_Move(Step_position) #rotation
@@ -272,7 +283,7 @@ print(rec)
 assert rec == "ok\n", "failed to set 'ready' state as target"
 SC.wait_for_state_transition(xcs)
 
-time.sleep(10)
+time.sleep(300)
 # capture dark
 for idx in range(numDarkFr):
     im = detector.acquire_image()
