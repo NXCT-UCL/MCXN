@@ -50,7 +50,7 @@ if jitter_flag
     jitter_vec_px = jitter_dir*round(jitter_vec/px); %%%%
     jitter_vec_px(end) = 0;
 else
-    jitter_vec = zeros(1,num_proj);
+    jitter_vec_px = zeros(1,num_proj);
 end
 
 %% Load flat and darks

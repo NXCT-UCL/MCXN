@@ -58,7 +58,7 @@ if jitter_flag
     jitter_vec_px = jitter_dir*round(jitter_vec/px); %%%%
     jitter_vec_px(end) = 0;
 else
-    jitter_vec = zeros(1,num_proj);
+    jitter_vec_px = zeros(1,num_proj);
 end
 
 dark_names = dir([inFolder,'Dark*']);
@@ -181,15 +181,15 @@ translationMatrix = eye(3);
 translationMatrix([3,6]) = [shift_x,shift_y];
 tform = affine2d(translationMatrix);
 outputView = imref2d(size(corrected)); % Define output view
-warped = imwarp(corrected, tform, 'OutputView', outputView);
+corrected = imwarp(corrected, tform, 'OutputView', outputView);
 
 % Crop
-warped = imcrop(warped,rect);
+corrected = imcrop(corrected,rect);
 
 % Save
 im_name = strcat('proj_end', '.tif');
 fname = strcat(outFolder,im_name);
-imwrite2tif(warped, [], fname, 'single');
+imwrite2tif(corrected, [], fname, 'single');
 
 %%
 
