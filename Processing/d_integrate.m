@@ -1,5 +1,7 @@
 clear;
 
+detector = 'moment';
+
 sampleFolder = '..\';
 inFolder = strcat(sampleFolder,'corrected\');
 outFolder = strcat(sampleFolder, 'phase\');
@@ -18,7 +20,13 @@ E = 13;
 R1 = 6;
 R2 = 60-R1;
 gamma = 300;
-px = 4.5e-3;
+
+switch detector
+    case 'moment'
+        px = 4.5e-3;
+    case 'primeBSI'
+        px = 27.9e-3;
+end
 
 parfor idx = 1:num_proj
 
