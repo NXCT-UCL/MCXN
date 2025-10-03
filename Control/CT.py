@@ -23,7 +23,7 @@ import tifffile as tiff
 import paramiko
 import pandas as pd
 
-filepath = 'D:/25_09_15/2_Lymph70/'
+filepath = 'D:/25_09_16/2_Lymph100_ROI/'
 Subfolder_name="data/"
 
 newpath = filepath + Subfolder_name
@@ -77,7 +77,7 @@ if jitter_flag:
         if lines != num_proj:
             jitter_sequence = [random.randrange(-jitter_range_px,jitter_range_px,1) for i in range(num_proj)]
             jitter_sequence = np.array(jitter_sequence)*px 
-            jitter_sequence[np.arange(0,num_proj+1,flat_interval)] = 0
+            jitter_sequence[np.arange(0,num_proj,flat_interval)] = 0
             jitter_file = open(filepath + '/jitter.txt','w')
             for j in jitter_sequence:
                 jitter_file.write( str(j) + '\n')
@@ -88,7 +88,7 @@ if jitter_flag:
     else:
         jitter_sequence = [random.randrange(-jitter_range_px,jitter_range_px,1) for i in range(num_proj)]
         jitter_sequence = np.array(jitter_sequence)*px
-        jitter_sequence[np.arange(0,num_proj+1,flat_interval)] = 0
+        jitter_sequence[np.arange(0,num_proj,flat_interval)] = 0
         jitter_file = open(filepath + '/jitter.txt','w')
         for j in jitter_sequence:
             jitter_file.write( str(j) + '\n')
@@ -285,7 +285,7 @@ SC.wait_for_state_transition(xcs)
 
 time.sleep(300)
 # capture dark
-for idx in range(numDarkFr):
+for idx in range(numDarkFr):                            
     im = detector.acquire_image()
     fname = filepath + Subfolder_name + 'Dark_end_idx' + str(idx) +'.tiff'
     tiff.imsave(fname, im)
