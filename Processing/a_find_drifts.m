@@ -20,7 +20,7 @@ angles = linspace(0,ang_range,num_proj+1);
 angles = angles(1:end-1);
 ref_positions = find(~rem(angles,ref_step));
 
-jitter_flag = 0;
+jitter_flag = 1;
 
 switch detector
     case 'moment'
@@ -48,9 +48,9 @@ rect = rect + [50,50,-100,-100];
 if jitter_flag
     jitter_vec = readmatrix(strcat(sampleFolder,'jitter.txt')); %%%%
     jitter_vec_px = jitter_dir*round(jitter_vec/px); %%%%
+    jitter_vec_px(end) = 0;
 else
     jitter_vec = zeros(1,num_proj);
-    jitter_vec_px = jitter_dir*round(jitter_vec/px); %%%%
 end
 
 %% Load flat and darks
@@ -86,7 +86,7 @@ for idx = 1:num_refs
     ref_images(:,:,idx) = double(imread(fname));
 
     proj_nm = ref_positions(idx);
-    im_name = strcat('Im_proj',num2str(proj_nm-1), '_fr0.tiff');
+    im_name = strcat('Im_proj',num2str(proj_nm-1), '.tiff');
     fname = strcat(inFolder, im_name);
     mov_images(:,:,idx) = double(imread(fname));
 
@@ -138,11 +138,12 @@ parfor idx = 1:num_refs
     % movingImage = imhistmatch(movingImage, fixedImage);
     
     % Apply Gaussian blur to both images
-    fixedImageBlurred = imgaussfilt(fixedImage, 2);
-    movingImageBlurred = imgaussfilt(movingImage, 2);
+    fixedImageBlurred = imgaussfilt(fixedImage, 8);
+    movingImageBlurred = imgaussfilt(movingImage, 8);
     
     % Define the optimizer and metric for the registration process
     [optimizer, metric] = imregconfig('monomodal');
+    optimizer.MaximumStepLength = 2.250000e-03;
     
     % Perform the registration using translation transformation on blurred images
     tform = imregtform(movingImageBlurred, fixedImageBlurred, 'translation', optimizer, metric);
@@ -152,7 +153,7 @@ parfor idx = 1:num_refs
     
     % % Display the results
     % figure;
-    % imshow(fixedImage);
+    % imshow(fixedImageBlurred);
     % title('Fixed Image');
     % 
     % figure;
@@ -206,21 +207,22 @@ movingImage(movingImage == Inf) = 1;
 % movingImage = imhistmatch(movingImage, fixedImage);
 
 % Apply Gaussian blur to both images
-fixedImageBlurred = imgaussfilt(fixedImage, 2);
-movingImageBlurred = imgaussfilt(movingImage, 2);
+fixedImageBlurred = imgaussfilt(fixedImage, 8);
+movingImageBlurred = imgaussfilt(movingImage, 8);
 
 % Define the optimizer and metric for the registration process
 [optimizer, metric] = imregconfig('monomodal');
+optimizer.MaximumStepLength = 2.250000e-03;
 
 % Perform the registration using translation transformation on blurred images
 tform = imregtform(movingImageBlurred, fixedImageBlurred, 'translation', optimizer, metric);
 
 % Apply the transformation to the original moving image
-registeredImage = imwarp(movingImage, tform, 'OutputView', imref2d(size(fixedImage)));
+registeredImage = imwarp(movingImageBlurred, tform, 'OutputView', imref2d(size(fixedImage)));
 
 % Display the results
 figure;
-imshow(fixedImage);
+imshow(fixedImageBlurred);
 title('Fixed Image');
 
 figure;
