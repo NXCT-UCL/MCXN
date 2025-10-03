@@ -18,7 +18,7 @@ class Moment(BaseDetector):
     def initialise(self):
         
         self.core = Core()
-        self.core.set_roi('Camera-1',570,60,2048,2048)
+        self.core.set_roi('Camera-2',570,60,2048,2048)
     
     def acquire_image(self):
 

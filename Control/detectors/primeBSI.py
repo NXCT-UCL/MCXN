@@ -17,6 +17,7 @@ class PrimeBSI(BaseDetector):
     def initialise(self):
         
         self.core = Core()
+        self.core.set_roi('Camera-1',356,382,1314,1314)
     
     def acquire_image(self):
 
