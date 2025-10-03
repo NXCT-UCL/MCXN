@@ -42,7 +42,7 @@ switch detector
         jitter_dir = 1;
 end
 
-jitter_flag = 0;
+jitter_flag = 1;
 
 ref_step = 20; %degrees
 ref_step_proj = num_proj/ang_range*ref_step;
@@ -56,9 +56,9 @@ load shifts.mat
 if jitter_flag
     jitter_vec = readmatrix(strcat(sampleFolder,'jitter.txt')); %%%%
     jitter_vec_px = jitter_dir*round(jitter_vec/px); %%%%
+    jitter_vec_px(end) = 0;
 else
     jitter_vec = zeros(1,num_proj);
-    jitter_vec_px = jitter_dir*round(jitter_vec/px); %%%%
 end
 
 dark_names = dir([inFolder,'Dark*']);
@@ -101,7 +101,7 @@ parfor idx = 1:num_proj
 
     sample_fr = zeros(ly,lx,numSampleFr);
     for idx_fr = 1:numSampleFr
-        im_name = strcat('Im_proj', num2str(idx-1), '_fr',num2str(idx_fr-1),'.tiff');
+        im_name = strcat('Im_proj', num2str(idx-1), '.tiff');
         fname = strcat(inFolder,im_name);
         sample_fr(:,:,idx_fr) = double(imread(fname));
     end
