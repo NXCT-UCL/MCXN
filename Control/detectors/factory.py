@@ -12,10 +12,10 @@ from .moment import Moment
 def get_detector(name, **kwargs):
     detectors = {
         "brillianse": Brillianse,
-        "kinetix": PrimeBSI,
+        "primeBSI": PrimeBSI,
         "moment": Moment,
     }
     try:
-        return detectors[name.lower()](**kwargs)
+        return detectors[name](**kwargs)
     except KeyError:
         raise ValueError(f"Unknown detector name: {name}")
