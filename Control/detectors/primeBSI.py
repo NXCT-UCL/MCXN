@@ -27,7 +27,7 @@ class PrimeBSI(BaseDetector):
         #### Setting and getting properties ####
         # Here we set a property of the core itself, but same code works for device properties
         auto_shutter = self.core.get_property('Core', 'AutoShutter')
-        self.core.set_property('Core', 'AutoShutter', 0)
+        #self.core.set_property('Core', 'AutoShutter', 0)
         
         #### Acquiring images ####
         # The micro-manager core exposes several mechanisms foor acquiring images. In order to

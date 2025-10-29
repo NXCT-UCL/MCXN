@@ -29,3 +29,11 @@ ESS_Position()
 
 ESS_Relative_Move(-2)
 ESS_Relative_Move(2)
+
+# %%
+
+ESS_Home()
+
+#%%
+
+ESS_Absolute_Move(-8)
