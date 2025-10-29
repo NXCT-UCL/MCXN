@@ -114,6 +114,7 @@ dpx_M2 = abs(tform.A(7));
 M1 = dpx_M1/dx*px;
 M2 = dpx_M2/dx*px;
 
+disp('Mag:');
 disp(M1);
 disp(M2);
 
