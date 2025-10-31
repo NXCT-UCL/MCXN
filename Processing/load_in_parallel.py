@@ -36,7 +36,7 @@ ly = 4000
 angular_range = 360
 num_proj = 4000
 px = 8e-3
-rot_dir = -1
+rot_dir = -1 # moment -1, bsi +1
 
 # Get the list of TIFF files
 file_list = [f for f in os.listdir(inFolder) if f.endswith('.tif')]

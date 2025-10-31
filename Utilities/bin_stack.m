@@ -1,7 +1,7 @@
 function out = bin_stack(stack, bin, method)
 % BIN_STACK  Bin a 2D or 3D array by integer factors.
-%   out = BIN_STACK(stack, [bx,by])        % works for 2D -> returns 2D
-%   out = BIN_STACK(stack, [bx,by,bz])     % works for 3D -> returns 3D
+%   out = BIN_STACK(stack, [by,bx])        % works for 2D -> returns 2D
+%   out = BIN_STACK(stack, [by,bx,bz])     % works for 3D -> returns 3D
 %   out = BIN_STACK(..., 'median')         % optional: use 'median' instead of 'mean'
 %
 % Notes:
@@ -14,7 +14,7 @@ function out = bin_stack(stack, bin, method)
     if numel(bin) < 3
         bin = [bin ones(1,3-numel(bin))];  % pad missing bin dims with 1
     end
-    bx = bin(1); by = bin(2); bz = bin(3);
+    by = bin(1); bx = bin(2); bz = bin(3);
     if any([bx,by,bz] < 1) || any(mod([bx,by,bz],1) ~= 0)
         error('Bin factors must be positive integers.');
     end
@@ -28,14 +28,14 @@ function out = bin_stack(stack, bin, method)
     end
 
     % Crop to integer multiples
-    [nx, ny, nz] = size(stack);
+    [ny, nx, nz] = size(stack);
     nx2 = floor(nx/bx)*bx;
     ny2 = floor(ny/by)*by;
     nz2 = floor(nz/bz)*bz;
-    stack = stack(1:nx2, 1:ny2, 1:nz2);
+    stack = stack(1:ny2, 1:nx2, 1:nz2);
 
     % Reshape into bin blocks
-    stack = reshape(stack, bx, nx2/bx, by, ny2/by, bz, nz2/bz);
+    stack = reshape(stack, by, ny2/by, bx, nx2/bx, bz, nz2/bz);
 
     % Apply binning method
     switch method
@@ -45,7 +45,7 @@ function out = bin_stack(stack, bin, method)
         case 'median'
             % Median over each block — a bit slower but robust
             % Flatten block dimensions first
-            out = squeeze(median(reshape(stack, [], nx2/bx, ny2/by, nz2/bz), 1));
+            out = squeeze(median(reshape(permute(stack,[1,3,2,4,5]),[by*bx,ny2/by,nx2/bx,nz2/bz]),1));
 
         otherwise
             error('Unknown method "%s". Use "mean" or "median".', method);
