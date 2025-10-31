@@ -22,13 +22,16 @@ from detectors.factory import get_detector
 import tifffile as tiff
 import paramiko
 import pandas as pd
+from datetime import datetime
 
-filepath = 'D:/25_09_16/2_Lymph100_ROI/'
+filepath = 'D:/25_10_31/test_crash/'
 Subfolder_name="data/"
 
 newpath = filepath + Subfolder_name
 if not os.path.exists(newpath):
     os.makedirs(newpath)
+FLAG_FILE = os.path.join(filepath,"source_failure_log.txt")
+
     
 # save the current file
 script_name = os.path.basename(__file__)
@@ -36,8 +39,8 @@ destination = os.path.join(filepath, script_name)
 shutil.copy(__file__, destination)
 
 # Parameters for reference scan
-pre_scan = 1
-pre_scan_step = 20 #degrees, must be multiple of increment
+pre_scan = 0
+pre_scan_step = 30 #degrees, must be multiple of increment
 pre_scan_folder = 'pre_scan/'
 newpath = filepath + pre_scan_folder
 if pre_scan:
@@ -46,17 +49,17 @@ if pre_scan:
 
 
 exp = 2000 #ms
-sample_out_dx = 5 # relative move of sample out, sample_out = AT_x + dx
-num_proj = 1800 # num projections
+sample_out_dx = 2 # relative move of sample out, sample_out = AT_x + dx
+num_proj = 2400 # num projections
 rotation_angle = 360 # angular range
 ESS_start_pos = -8 # rotator pos at proj 0
 start_proj = 0 # can start at projection number start_proj
 direction = -1 # rotation direction
 extra_proj = 1 # bolean, extra projection at ESS_start_pos at end of scan
 flat_interval = 200 # how many proj to take flats 
-numDarkFr = 12 # number of darks, taken 10mins after scan
-numFlatFr = 12 # number of flat frames averaged 
-numSampleFr = 4 # number of sample frames averaged
+numDarkFr = 1 # number of darks, taken 10mins after scan
+numFlatFr = 1 # number of flat frames averaged 
+numSampleFr = 1 # number of sample frames averaged
 increment = direction*(rotation_angle/num_proj) #rotation increment at each projection
 det_name = 'moment'
 
@@ -150,6 +153,7 @@ with open(param_file, 'w') as file:
     file.write(f"numDarkFr = {numDarkFr}\n")
     file.write(f"numFlatFr = {numFlatFr}\n")
     file.write(f"numSampleFr = {numSampleFr}\n")
+    file.write(f"pre_scan_step = {pre_scan_step}\n")
     file.write(f"Sample X = {AT_x}\n")
     file.write(f"Sample Y = {AT_y}\n")
     file.write(f"Sample Z = {AT_z}\n")
@@ -243,6 +247,23 @@ for proj_idx in np.arange(start_proj,num_proj):
     
     print('######### Projection '+str(proj_idx) + ' ##########')
     np.savetxt(filepath+Subfolder_name+'/RotatorPositionLog.txt',posRot)
+    
+    # If source has turned off, turn it back on again    
+    xcs.send("state=?")
+    rec = xcs.receive()
+    if rec == "'ready'\n":
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with open(FLAG_FILE, "a") as f:
+            f.write(f"{timestamp}\tProjection {proj_idx}\n")
+        print(f"Source failure detected and logged at projection {proj_idx}")
+        time.sleep(60) # pause for 60 seconds
+        xcs = SC.XCS("128.40.160.24")
+        xcs.send('#user')
+        xcs.send("state=on")
+        rec = xcs.receive()
+        print(rec)
+        assert rec == "ok\n", "failed to set 'fullfocus' state as target"
+        SC.wait_for_state_transition(xcs)
     
 
 if extra_proj:
