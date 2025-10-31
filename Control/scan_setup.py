@@ -37,3 +37,11 @@ ESS_Home()
 #%%
 
 ESS_Absolute_Move(-8)
+
+#%%
+
+from detectors.factory import get_detector
+
+det_name = 'primeBSI'
+detector = get_detector(det_name)
+detector.initialise()
