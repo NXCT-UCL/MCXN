@@ -44,7 +44,7 @@ end
 
 jitter_flag = 1;
 
-ref_step = 20; %degrees
+ref_step = read_param('pre_scan_step',param_file); %degrees
 ref_step_proj = num_proj/ang_range*ref_step;
 ref_positions = 0:ref_step_proj:num_proj;
 load shifts.mat

@@ -13,7 +13,7 @@ extra_proj = read_param('extra_proj',param_file);
 
 detector = 'moment';
 
-ref_step = 20; %degrees
+ref_step = read_param('pre_scan_step',param_file); %degrees
 num_refs = ang_range/ref_step;
 
 angles = linspace(0,ang_range,num_proj+1);
@@ -282,7 +282,7 @@ if extra_proj
     
     % compose tform from last 
     tform = transltform2d(eye(3));
-    tform.T(3,2) = tranx(end); tform.T(3,1) = trany(end);
+    tform.T(3,1) = tranx(end); tform.T(3,2) = trany(end);
     
     % Perform the registration using translation transformation on blurred images
     tform = imregtform(movingImageBlurred, fixedImageBlurred, 'translation', optimizer, metric, InitialTransformation=tform);

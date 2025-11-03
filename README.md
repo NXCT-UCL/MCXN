@@ -2,7 +2,7 @@
 This repository is designed to host all the code used in the development of the Multi-Contrast X-ray Nanoscope, hosted at The Francis Crick Institute
 
 ## Built With
-The scripts are a mixture of python and Matlab files. Please install both before proceeding. I advise also installing a Python IDE, here we use spyder
+The scripts are a mixture of python and Matlab files. Please install both before proceeding, alongside a suitable python IDE.
 The reconstruction pipeline requires installation of CIL
 https://github.com/TomographicImaging/CIL.git
 
