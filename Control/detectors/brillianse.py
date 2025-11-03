@@ -11,8 +11,12 @@ from BrillMethods import *
 class Brillianse(BaseDetector):
     
     def __init__(self, detector_pointer = None, image_shape=(4096,4096)):
+        super().__init__()
         self.detector_pointer = POINTER(DetObj)()
         self.image_shape = image_shape
+        self.z_axis_channel = 2
+        self.z_offset_mm = 0.0
+        self.z_direction = 1
 
     def initialise(self):
         print("Initialising BrillianSe detector...")
@@ -59,5 +63,5 @@ class Brillianse(BaseDetector):
         return np_array
 
     def set_exposure_time(self, exp=1000):
-        result = BrillianSe_SetFrameTime(detector_pointer, exp+5, exp)
+        result = BrillianSe_SetFrameTime(self.detector_pointer, exp+5, exp)
         print("Exposure time set: %s" % BrillianSe_GetErrorMessage(result))

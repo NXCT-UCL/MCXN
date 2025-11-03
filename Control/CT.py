@@ -116,10 +116,15 @@ ESS.ESS_PGain(2000)
 ESS.ESS_VelocityFF(2048)
 ESS.ESS_Velocity_PGain(2.5)
 ESS.ESS_Prep_Move()
+    
+# Initialise Detector
+detector = get_detector(det_name)
+detector.initialise()
+detector.set_exposure_time(exp)
 
 # Newport
-NP_xaxis = 1
-NP_zaxis = 3
+NP_xaxis = detector.get_x_axis_channel()
+NP_zaxis = detector.get_z_axis_channel()
 NP.NP_init()
 NP_x = NP.NP_gp(NP_xaxis)
 NP_z = NP.NP_gp(NP_zaxis)
@@ -170,10 +175,6 @@ if press_read == 0:
     ESS.ESS_Close()
 else:
     ESS.ESS_Absolute_Move(ESS_start_pos) #rotation
-    
-detector = get_detector(det_name)
-detector.initialise()
-detector.set_exposure_time(exp)
 
 posRot = []
 

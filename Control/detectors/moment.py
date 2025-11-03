@@ -9,11 +9,13 @@ from .base import BaseDetector
 from pycromanager import Core
 import numpy as np
 
-
 class Moment(BaseDetector):
     
     def __init__(self):
-        pass
+        super().__init__()
+        self.z_axis_channel = 3
+        self.z_offset_mm = 70.0
+        self.z_direction = -1
     
     def initialise(self):
         
