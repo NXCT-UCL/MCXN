@@ -1,0 +1,6 @@
+/Control/__*
+/Control/one_off/*
+/Control/detectors/__pycache__/*
+/Control/SDK.log
+*.asv
+/Control/testing/__pycache__/*
